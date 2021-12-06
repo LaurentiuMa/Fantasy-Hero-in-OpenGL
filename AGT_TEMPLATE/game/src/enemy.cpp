@@ -13,29 +13,41 @@ void enemy::on_update(const engine::timestep& time_step, const glm::vec3& player
 {
 	float distance_to_player = glm::distance(m_object->position(), player_position);
 	// check which state is the enemy in, then execute the matching behaviour
-	if (m_state == state::idle)
+	if (m_state == state::patrolling)
 	{
 		patrol(time_step);
 		// check whether the condition has been met to switch to the on_guard state
 		if (distance_to_player < m_detection_radius)
 			m_state = state::on_guard;
+		velocityBegin = m_object->velocity();
 	}
 	else if (m_state == state::on_guard)
 	{
 		face_player(time_step, player_position);
-		// check whether the condition has been met to switch back to idle state
+		// check whether the condition has been met to switch back to patrolling state
 		if (distance_to_player > m_detection_radius)
-			m_state = state::idle;
+			m_state = state::patrolling;
 		// check whether the condition has been met to switch to the chasing state
 		else if (distance_to_player < m_trigger_radius)
 			m_state = state::chasing;
 	}
-	else
+	else if(m_state == state::chasing)
 	{
 		chase_player(time_step, player_position);
-		// check whether the condition has been met to switch back to idle state
+		// check whether the condition has been met to switch back to patrolling state
 		if (distance_to_player > m_detection_radius)
-			m_state = state::idle;
+		{
+			m_state = state::resting;
+			restBeginTime = (float)time_step;
+		}
+	}
+	else
+	{
+		if (rest(time_step))
+		{
+			m_state = state::patrolling;
+			restTime = defaultrestTime;
+		}
 	}
 }
 // move forwards until the timer runs out, then switch direction to move the other way
@@ -71,4 +83,19 @@ void enemy::chase_player(const engine::timestep& time_step, const glm::vec3&
 	m_object->set_position(m_object->position() + m_object->forward() * m_speed *
 		(float)time_step);
 	m_object->set_rotation_amount(atan2(m_object->forward().x, m_object->forward().z));
+}
+
+//after resting, the enemy continues seeking the player in the last direction it was seen and continues
+//the routine.
+bool enemy::rest(const engine::timestep& time_step)
+{
+	m_object->set_velocity(glm::vec3(0));
+	restTime = restTime - (float)time_step;
+	if (restTime < .0f)
+	{
+		m_object->set_velocity(velocityBegin);
+		return true;
+	}
+	return false;
+	
 }
