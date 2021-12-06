@@ -1,8 +1,13 @@
 #pragma once
 #include <engine.h>
+#include <iostream>
+#include <vector>
+#include <algorithm>
 #include "player.h"
 #include "arcane_blast.h"
-#include"engine/entities/bounding_box_bullet.h"
+#include "engine/entities/bounding_box_bullet.h"
+#include "enemy.h"
+
 
 class example_layer : public engine::layer
 {
@@ -35,9 +40,12 @@ private:
 
 	player								m_player{};
 
+	enemy								m_enemy{};
+
 	arcane_blast m_arcane_blast;
 
 	engine::bounding_box				m_barrel_box;
+	engine::bounding_box				m_cow_box;
 
 	engine::ref<engine::material>		m_material{};
 	engine::ref<engine::material>		m_mannequin_material{};

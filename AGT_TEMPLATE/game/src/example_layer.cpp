@@ -108,6 +108,7 @@ example_layer::example_layer()
 	terrain_props.textures = terrain_textures;
 	terrain_props.is_static = true;
 	terrain_props.type = 0;
+	terrain_props.position = glm::vec3(0.f);
 	terrain_props.bounding_shape = glm::vec3(100.f, 0.5f, 100.f);
 	terrain_props.restitution = 0.92f;
 	m_terrain = engine::game_object::create(terrain_props);
@@ -142,15 +143,26 @@ example_layer::example_layer()
 	m_options = engine::game_object::create(options_props);
 
 	// Load the cow model. Create a cow object. Set its properties
-	//engine::ref <engine::model> cow_model = engine::model::create("assets/models/static/cow4.3ds");
-	//engine::game_object_properties cow_props;
-	//cow_props.meshes = cow_model->meshes();
-	//cow_props.textures = cow_model->textures();
-	//float cow_scale = 1.f / glm::max(cow_model->size().x, glm::max(cow_model->size().y, cow_model->size().z));
-	//cow_props.position = { -4.f,0.5f, -5.f };
-	//cow_props.scale = glm::vec3(cow_scale);
-	//cow_props.bounding_shape = cow_model->size() / 2.f * cow_scale;
-	//m_cow = engine::game_object::create(cow_props);
+	engine::ref<engine::model>cow_model =
+		engine::model::create("assets/models/static/cow4.3ds");
+	engine::game_object_properties cow_props;
+	cow_props.meshes = cow_model->meshes();
+	cow_props.textures = cow_model->textures();
+	float cow_scale = 1.f / glm::max(cow_model->size().x, glm::max(cow_model->size().y,
+		cow_model->size().z));
+	cow_props.position = { 2.f,0.9f, 2.f };
+	cow_props.scale = glm::vec3(cow_scale);
+	cow_props.bounding_shape = cow_model->size() / 2.f;
+	cow_props.type = 0;
+	m_cow = engine::game_object::create(cow_props);
+	m_cow->set_offset(cow_model->offset());
+	m_cow_box.set_box(cow_props.bounding_shape.x * 2.f * cow_scale,
+		cow_props.bounding_shape.y * 2.f * cow_scale, cow_props.bounding_shape.z * 2.f *
+		cow_scale, cow_props.position - glm::vec3(0.f, m_cow->offset().y, 0.f) * m_cow->scale());
+	m_cow = engine::game_object::create(cow_props);
+
+	m_enemy.initialise(m_cow, cow_props.position, glm::vec3(1.f, 0.f, 0.f));
+
 
 	// Mesh downloaded from https://www.turbosquid.com/3d-models/3d-model-wooden-barrels-1488970
 	engine::ref <engine::model> barrel_model = engine::model::create("assets/models/static/barrel_obj.obj");
@@ -180,8 +192,6 @@ example_layer::example_layer()
 	m_sword = engine::game_object::create(sword_props);
 
 
-
-
 	// Load the tree model. Create a tree object. Set its properties
 	//engine::ref <engine::model> tree_model = engine::model::create("assets/models/static/elm.3ds");
 	//engine::game_object_properties tree_props;
@@ -206,7 +216,7 @@ example_layer::example_layer()
 	spell_props.rolling_friction = 0.1f;
 	m_spell = engine::game_object::create(spell_props);
 
-	float radius = 1.f;
+	float radius = 0.01f;
 	engine::ref<engine::sphere>sphere_shape = engine::sphere::create(10, 20, radius);
 	engine::game_object_properties sphere_props;
 	sphere_props.position = { 0.f, 3.f, 1.f };
@@ -253,15 +263,17 @@ example_layer::example_layer()
 	torch_props.meshes = { torch_shape->mesh() };
 	m_torch = engine::game_object::create(torch_props);
 
+
+	m_game_objects.push_back(m_terrain);
+
 	m_game_objects.push_back(m_intro);
 
 	m_game_objects.push_back(m_options);
 
-	m_game_objects.push_back(m_terrain);
 	m_game_objects.push_back(m_barrel);
 	m_game_objects.push_back(m_sword);
 
-	m_game_objects.push_back(m_ball);
+	//m_game_objects.push_back(m_ball);
 	m_game_objects.push_back(m_spell);
 	m_game_objects.push_back(m_mannequin);
 	//m_game_objects.push_back(m_cow);
@@ -296,9 +308,15 @@ void example_layer::on_update(const engine::timestep& time_step)
 
 	m_player.on_update(time_step);
 
+	m_enemy.on_update(time_step, m_player.object()->position());
+
+		
 	/*m_player_box.on_update(m_player.object()->position() - glm::vec3(0.f,
 		m_player.object()->offset().y, 0.f) * m_player.object()->scale(),
 		m_player.object()->rotation_amount(), m_player.object()->rotation_axis());*/
+
+	m_cow_box.on_update(m_cow->position() - glm::vec3(0.f, m_cow->offset().y, 0.f)
+		* m_cow->scale(), m_cow->rotation_amount(), m_cow->rotation_axis());
 
 	m_barrel_box.on_update(m_barrel->position() - glm::vec3(0.f, m_barrel->offset().y, 0.f)
 		* m_barrel->scale(), m_barrel->rotation_amount(), m_barrel->rotation_axis());
@@ -350,7 +368,10 @@ void example_layer::on_render()
 
 	m_barrel_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
+
 	m_player.getBox().on_render(2.5f, 0.f, 0.f, mesh_shader);
+
+	m_cow_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
 	engine::renderer::submit(mesh_shader, m_barrel);
 
@@ -364,37 +385,37 @@ void example_layer::on_render()
 	tree_transform = glm::translate(tree_transform, glm::vec3(4.f, 0.5, -5.0f));
 	tree_transform = glm::rotate(tree_transform, m_tree->rotation_amount(), m_tree->rotation_axis());
 	tree_transform = glm::scale(tree_transform, m_tree->scale());
-	engine::renderer::submit(mesh_shader, tree_transform, m_tree);
+	engine::renderer::submit(mesh_shader, tree_transform, m_tree);*/
 	
 	glm::mat4 cow_transform(1.0f);
 	cow_transform = glm::translate(cow_transform, m_cow->position());
 	cow_transform = glm::rotate(cow_transform, m_cow->rotation_amount(), m_cow->rotation_axis());
 	cow_transform = glm::scale(cow_transform, m_cow->scale());
-	engine::renderer::submit(mesh_shader, cow_transform, m_cow);*/
+	engine::renderer::submit(mesh_shader, cow_transform, m_cow);
 
 	m_arcane_blast.on_render(mesh_shader);
 
 	m_material->submit(mesh_shader);
 	//engine::renderer::submit(mesh_shader, m_spell);
 	//engine::renderer::submit(mesh_shader, m_tetrahedron);
-	for (auto j = 0; j < 6; j++)
-	{
-		for (auto i = 0; i < 6; i++)
-		{
-			glm::mat4 potion_transform(1.0f);
-			potion_transform = glm::translate(potion_transform, glm::vec3(i + 5.f, 1.f, j -2.f));
-			potion_transform = glm::scale(potion_transform, glm::vec3(.1f));
-			potion_transform = glm::rotate(potion_transform, i * 1.f * j, glm::vec3(1.f, 1.f, 1.f));
-			engine::renderer::submit(mesh_shader, potion_transform, m_potion);
-		}
-	}
+	//for (auto j = 0; j < 6; j++)
+	//{
+	//	for (auto i = 0; i < 6; i++)
+	//	{
+	//		glm::mat4 potion_transform(1.0f);
+	//		potion_transform = glm::translate(potion_transform, glm::vec3(i + 5.f, 1.f, j -2.f));
+	//		potion_transform = glm::scale(potion_transform, glm::vec3(.1f));
+	//		potion_transform = glm::rotate(potion_transform, i * 1.f * j, glm::vec3(1.f, 1.f, 1.f));
+	//		engine::renderer::submit(mesh_shader, potion_transform, m_potion);
+	//	}
+	//}
 	/*glm::mat4 potion_transform(1.0f);
 	potion_transform = glm::translate(potion_transform, glm::vec3(5.f, .5f, -2.f));
 	potion_transform = glm::scale(potion_transform, glm::vec3(.1f));
 	potion_transform = glm::rotate(potion_transform, -.9f, glm::vec3(0.f, 1.f, 0.f));
 	engine::renderer::submit(mesh_shader, potion_transform, m_potion);*/
 
-	for (auto j = 0; j < 6; j++)
+	/*for (auto j = 0; j < 6; j++)
 	{
 		for (auto i = 0; i < 6; i++)
 		{
@@ -404,7 +425,7 @@ void example_layer::on_render()
 			table_transform = glm::scale(table_transform, glm::vec3(.01f, .01, .02f));
 			engine::renderer::submit(mesh_shader, table_transform, m_table);
 		}
-	}
+	}*/
 	/*std::vector<glm::vec3> barrelStack{
 		glm::vec3(0.f, 0.9f, -5.f),
 		glm::vec3(-1.f, 0.9f, -5.f),
@@ -466,7 +487,7 @@ void example_layer::on_render()
 	torch_two_transform = glm::scale(torch_two_transform, glm::vec3(.1f));
 	engine::renderer::submit(mesh_shader, torch_two_transform, m_torch);*/
 
-	for (auto j = 0; j < 6; j++)
+	/*for (auto j = 0; j < 6; j++)
 	{
 		for (auto i = 0; i < 6; i++)
 		{
@@ -476,7 +497,7 @@ void example_layer::on_render()
 			torch_two_transform = glm::scale(torch_two_transform, glm::vec3(.1f));
 			engine::renderer::submit(mesh_shader, torch_two_transform, m_torch);
 		}
-	}
+	}*/
 
 	m_mannequin_material->submit(mesh_shader);
 	engine::renderer::submit(mesh_shader, m_player.object());

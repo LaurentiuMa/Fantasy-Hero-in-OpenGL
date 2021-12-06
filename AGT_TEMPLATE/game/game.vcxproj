@@ -131,11 +131,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\enemy.h" />
     <ClInclude Include="src\example_layer.h" />
     <ClInclude Include="src\arcane_blast.h" />
     <ClInclude Include="src\player.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\enemy.cpp" />
     <ClCompile Include="src\example_layer.cpp" />
     <ClCompile Include="src\arcane_blast.cpp" />
     <ClCompile Include="src\game.cpp" />
