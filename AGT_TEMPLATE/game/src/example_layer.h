@@ -19,8 +19,11 @@ public:
     void on_render() override; 
     void on_event(engine::event& event) override;
 
+	void resetPropPosition(engine::game_object_properties props);
+
 private:
 	void check_bounce();
+
 
 	engine::ref<engine::skybox>			m_skybox{};
 	engine::ref<engine::game_object>	m_terrain{};
@@ -37,6 +40,12 @@ private:
 	engine::ref<engine::game_object>	m_barrel{};
 	engine::ref<engine::game_object>	m_sword{};
 	engine::ref<engine::game_object>	m_ball{};
+
+	engine::ref<engine::game_object>	m_westEntranceWall{};
+	engine::ref<engine::game_object>	m_eastEntranceWall{};
+	engine::ref<engine::game_object>	m_topEntranceWall{};
+	engine::ref<engine::game_object>	m_topMainWall{};
+	engine::ref<engine::game_object>	m_southMainWall{};
 
 	player								m_player{};
 
@@ -68,4 +77,6 @@ private:
 	bool								m_active_spell;
 
 	float								m_active_spell_timer;
+
+	float wallLength, wallDepth, wallWidth;
 };

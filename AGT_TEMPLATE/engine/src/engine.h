@@ -26,6 +26,7 @@
 #include "engine/entities/shapes/tetrahedron.h"
 #include "engine/entities/shapes/table.h"
 #include "engine/entities/shapes/torch.h"
+#include "engine/entities/shapes/quadrilateral.h"
 #include "engine/entities/shapes/potion.h"
 #include "engine/renderer/text_manager.h"
 #include "engine/renderer/skinned_mesh.h"

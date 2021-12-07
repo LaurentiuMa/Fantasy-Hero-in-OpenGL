@@ -113,6 +113,44 @@ example_layer::example_layer()
 	terrain_props.restitution = 0.92f;
 	m_terrain = engine::game_object::create(terrain_props);
 
+
+	wallLength = 0.1f;
+	wallDepth = 4.f;
+	wallWidth = 5.f;
+
+	std::vector<engine::ref<engine::texture_2d>> wall_textures = { engine::texture_2d::create("assets/textures/spaceTerrain.jpg", false) };
+	engine::ref<engine::terrain> wall_shape = engine::terrain::create(wallLength, wallDepth, wallWidth);
+	engine::game_object_properties wall_props;
+	wall_props.meshes = { wall_shape->mesh() };
+	wall_props.textures = wall_textures;
+	wall_props.is_static = true;
+	wall_props.type = 0;
+	wall_props.position = glm::vec3(0.f);
+	wall_props.bounding_shape = glm::vec3(wallLength, wallDepth, wallWidth);
+	wall_props.restitution = 0.92f;
+	m_westEntranceWall = engine::game_object::create(wall_props);
+
+	wall_props.position = glm::vec3(-2.f,0,0);
+	m_eastEntranceWall = engine::game_object::create(wall_props);
+
+	wall_props.rotation_amount = glm::half_pi<float>();
+	wall_props.rotation_axis = glm::vec3(0,0,1);
+	wall_props.position = glm::vec3(-1.f, 4.f, 0);
+	m_topEntranceWall = engine::game_object::create(wall_props);
+
+	wall_props.position = glm::vec3(5.f, 4.25f, -10.f);
+	wall_props.scale = glm::vec3(2.f);
+	m_topMainWall = engine::game_object::create(wall_props);
+	wall_props.scale = glm::vec3(.5f);
+
+	resetPropPosition(wall_props);
+
+	wall_props.rotation_amount = glm::half_pi<float>();
+	wall_props.rotation_axis = glm::vec3(0,1,0);
+	wall_props.position = glm::vec3(2.5f, 2.f, -5.f);
+	m_southMainWall = engine::game_object::create(wall_props);
+	
+
 	// Texture downloaded from https://pixabay.com/illustrations/not-dead-dead-mummy-warrior-sword-4849850/
 	std::vector<engine::ref<engine::texture_2d>> intro_texture = { engine::texture_2d::create("assets/textures/introScreen.jpg", false) };
 	engine::ref<engine::terrain> intro_shape = engine::terrain::create(10.f, 0.5f, 6.f);
@@ -268,6 +306,13 @@ example_layer::example_layer()
 
 	m_game_objects.push_back(m_intro);
 
+	m_game_objects.push_back(m_westEntranceWall);
+	m_game_objects.push_back(m_eastEntranceWall);
+	m_game_objects.push_back(m_topEntranceWall);
+	m_game_objects.push_back(m_topMainWall);
+	m_game_objects.push_back(m_southMainWall);
+
+
 	m_game_objects.push_back(m_options);
 
 	m_game_objects.push_back(m_barrel);
@@ -365,6 +410,12 @@ void example_layer::on_render()
 	engine::renderer::submit(mesh_shader, m_skybox, skybox_tranform);
 
 	engine::renderer::submit(mesh_shader, m_terrain);
+
+	engine::renderer::submit(mesh_shader, m_westEntranceWall);
+	engine::renderer::submit(mesh_shader, m_eastEntranceWall);
+	engine::renderer::submit(mesh_shader, m_topEntranceWall);
+	engine::renderer::submit(mesh_shader, m_topMainWall);
+	engine::renderer::submit(mesh_shader, m_southMainWall);
 
 	m_barrel_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
@@ -562,4 +613,9 @@ void example_layer::check_bounce()
 		//m_audio_manager->play("bounce");
 		//m_audio_manager->play_spatialised_sound("bounce", m_3d_camera.position(), glm::vec3(m_spell->position().x, 0.f, m_spell->position().z));
 	m_prev_sphere_y_vel = m_game_objects.at(1)->velocity().y;
+}
+
+void example_layer::resetPropPosition(engine::game_object_properties props)
+{
+	props.position = glm::vec3(wallLength, wallDepth, wallWidth);
 }
