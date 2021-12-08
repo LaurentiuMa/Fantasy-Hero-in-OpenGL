@@ -28,9 +28,11 @@ private:
 	engine::ref<engine::skybox>			m_skybox{};
 	engine::ref<engine::game_object>	m_terrain{};
 	engine::ref<engine::game_object>	m_cow{};
+	engine::ref<engine::game_object>	m_mimic{};
 	engine::ref<engine::game_object>	m_tree{};
 	engine::ref<engine::game_object>	m_spell{};
 	engine::ref<engine::game_object>	m_mannequin{};
+	engine::ref<engine::game_object>	m_monk{};
 	engine::ref<engine::game_object>	m_tetrahedron{};
 	engine::ref<engine::game_object>	m_potion{};
 	engine::ref<engine::game_object>	m_table{};
@@ -46,6 +48,13 @@ private:
 	engine::ref<engine::game_object>	m_topEntranceWall{};
 	engine::ref<engine::game_object>	m_topMainWall{};
 	engine::ref<engine::game_object>	m_southMainWall{};
+	engine::ref<engine::game_object>	m_southInnerWall{};
+	engine::ref<engine::game_object>	m_southAngledWall{};
+	engine::ref<engine::game_object>	m_southEastWall{};
+	engine::ref<engine::game_object>	m_mainEastWall{};
+	engine::ref<engine::game_object>	m_mainNorthWall{};
+	engine::ref<engine::game_object>	m_mainWestWall{};
+	engine::ref<engine::game_object>	m_splitterWall{};
 
 	player								m_player{};
 
@@ -55,9 +64,13 @@ private:
 
 	engine::bounding_box				m_barrel_box;
 	engine::bounding_box				m_cow_box;
+	engine::bounding_box				m_mimic_box;
+
 
 	engine::ref<engine::material>		m_material{};
 	engine::ref<engine::material>		m_mannequin_material{};
+	engine::ref<engine::material>		m_monk_material{};
+
 
 	engine::DirectionalLight            m_directionalLight;
 
@@ -78,5 +91,8 @@ private:
 
 	float								m_active_spell_timer;
 
-	float wallLength, wallDepth, wallWidth;
+	float								wallLength, wallDepth, wallWidth;
+
+	glm::vec3							enemy_pos;
+
 };

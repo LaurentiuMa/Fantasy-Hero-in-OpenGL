@@ -84,3 +84,24 @@ void engine::bounding_box::on_render(float r, float g, float b, const engine::re
 	engine::renderer_api::draw_indexed_lines(m_mesh->va());
 	std::dynamic_pointer_cast<engine::gl_shader>(shader)->set_uniform("colouring_on", false);
 }
+
+bool engine::bounding_box::collision(engine::bounding_box other_box)
+{
+
+	float width1, height1, depth1, width2, height2, depth2;
+	glm::vec3 bottom1, bottom2, centre1, centre2;
+
+	get(bottom1, width1, height1, depth1); // this box
+	other_box.get(bottom2, width2, height2, depth2); // other box
+	centre1 = bottom1 + glm::vec3(width1 / 2.f, height1 / 2.0f, depth1 / 2.f);
+	centre2 = bottom2 + glm::vec3(width2 / 2.f, height2 / 2.0f, depth2 / 2.f);
+
+	glm::vec3 v = centre2 - centre1;
+	if (fabs(v.x) * 2 <= (width1 + width2) &&
+		fabs(v.y) * 2 <= (height1 + height2) &&
+		fabs(v.z) * 2 <= (depth1 + depth2))
+		return true; // Collision detected
+	else
+		return false; // No collision detected
+}
+

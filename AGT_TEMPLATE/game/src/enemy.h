@@ -48,9 +48,9 @@ private:
 	};
 	int patrolDirectionTimeCount = 0;
 	std::vector<int> patrolTime{
+		8,
 		4,
-		2,
-		2
+		4
 	};
 
 	float defaultrestTime = 4;

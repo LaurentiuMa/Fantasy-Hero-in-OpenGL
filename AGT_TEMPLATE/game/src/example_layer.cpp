@@ -149,7 +149,43 @@ example_layer::example_layer()
 	wall_props.rotation_axis = glm::vec3(0,1,0);
 	wall_props.position = glm::vec3(2.5f, 2.f, -5.f);
 	m_southMainWall = engine::game_object::create(wall_props);
-	
+
+	wall_props.rotation_amount = glm::half_pi<float>();
+	wall_props.rotation_axis = glm::vec3(1, 0, 0);
+	wall_props.position = glm::vec3(5.f, 2.f, -5.f);
+	m_southInnerWall = engine::game_object::create(wall_props);
+
+	wall_props.rotation_amount = -3 / glm::half_pi<float>();
+	wall_props.rotation_axis = glm::vec3(0, 1, 0);
+	wall_props.position = glm::vec3(7.4f, 2.f, -2.20f);
+	m_southAngledWall = engine::game_object::create(wall_props);
+
+	wall_props.rotation_amount = -2 / (3 * glm::half_pi<float>());
+	wall_props.rotation_axis = glm::vec3(0, 1, 0);
+	wall_props.position = glm::vec3(10.75f, 2.f, -3.70f);
+	m_southEastWall = engine::game_object::create(wall_props);
+
+	wall_props.scale = glm::vec3(1.f,1.f,1.4f);
+	wall_props.rotation_amount = (3 * (glm::pi<float>()/2)) + glm::half_pi<float>();
+	wall_props.rotation_axis = glm::vec3(0, 1, 0);
+	wall_props.position = glm::vec3(11.7f, 2.f, -12.5f);
+	m_mainEastWall = engine::game_object::create(wall_props);
+
+	wall_props.scale = glm::vec3(1.f, 1.f, 1.5f);
+	wall_props.rotation_amount = glm::half_pi<float>();
+	wall_props.rotation_axis = glm::vec3(0, 1, 0);
+	wall_props.position = glm::vec3(5.f, 2.f, -19.f);
+	m_mainNorthWall = engine::game_object::create(wall_props);
+
+	wall_props.scale = glm::vec3(1.f, 1.f, 1.4f);
+	wall_props.rotation_amount = glm::pi<float>();
+	wall_props.rotation_axis = glm::vec3(0, 1, 0);
+	wall_props.position = glm::vec3(-2.f, 2.f, -12.f);
+	m_mainWestWall = engine::game_object::create(wall_props);
+
+	wall_props.scale = glm::vec3(1.f, 1.f, 1.f);
+	wall_props.position = glm::vec3(5.f, 2.f, -12.f);
+	m_splitterWall = engine::game_object::create(wall_props);
 
 	// Texture downloaded from https://pixabay.com/illustrations/not-dead-dead-mummy-warrior-sword-4849850/
 	std::vector<engine::ref<engine::texture_2d>> intro_texture = { engine::texture_2d::create("assets/textures/introScreen.jpg", false) };
@@ -181,14 +217,15 @@ example_layer::example_layer()
 	m_options = engine::game_object::create(options_props);
 
 	// Load the cow model. Create a cow object. Set its properties
-	engine::ref<engine::model>cow_model =
-		engine::model::create("assets/models/static/cow4.3ds");
+	engine::ref<engine::model> cow_model =
+		engine::model::create("assets/models/static/AnimalOBJ.obj");
 	engine::game_object_properties cow_props;
 	cow_props.meshes = cow_model->meshes();
 	cow_props.textures = cow_model->textures();
 	float cow_scale = 1.f / glm::max(cow_model->size().x, glm::max(cow_model->size().y,
 		cow_model->size().z));
-	cow_props.position = { 2.f,0.9f, 2.f };
+	//cow_props.position = { 7.f,0.5f, -5.f };
+	cow_props.position = { 7.f,0.5f, -1.f };
 	cow_props.scale = glm::vec3(cow_scale);
 	cow_props.bounding_shape = cow_model->size() / 2.f;
 	cow_props.type = 0;
@@ -201,6 +238,26 @@ example_layer::example_layer()
 
 	m_enemy.initialise(m_cow, cow_props.position, glm::vec3(1.f, 0.f, 0.f));
 
+	// Load the mimic model. Create a mimic object. Set its properties
+	//downloaded from https://opengameart.org/content/mimic
+	engine::ref<engine::model> mimic_model =
+		engine::model::create("assets/models/static/mimic/mimic_000001.obj");
+	engine::game_object_properties mimic_props;
+	mimic_props.meshes = mimic_model->meshes();
+	mimic_props.textures = mimic_model->textures();
+	float mimic_scale = 1.f / glm::max(mimic_model->size().x, glm::max(mimic_model->size().y,
+		mimic_model->size().z));
+	//mimic_props.position = { 7.f,0.5f, -5.f };
+	mimic_props.position = { 7.f,0.0f, 1.f };
+	mimic_props.scale = glm::vec3(mimic_scale) ;
+	mimic_props.bounding_shape = mimic_model->size() / 2.f;
+	mimic_props.type = 0;
+	m_mimic = engine::game_object::create(mimic_props);
+	m_mimic->set_offset(mimic_model->offset());
+	m_mimic_box.set_box(mimic_props.bounding_shape.x * 2.f * mimic_scale,
+		mimic_props.bounding_shape.y * 2.f * mimic_scale, mimic_props.bounding_shape.z * 2.f *
+		mimic_scale, mimic_props.position - glm::vec3(0.f, m_mimic->offset().y, 0.f) * m_mimic->scale());
+	m_mimic = engine::game_object::create(mimic_props);
 
 	// Mesh downloaded from https://www.turbosquid.com/3d-models/3d-model-wooden-barrels-1488970
 	engine::ref <engine::model> barrel_model = engine::model::create("assets/models/static/barrel_obj.obj");
@@ -311,6 +368,13 @@ example_layer::example_layer()
 	m_game_objects.push_back(m_topEntranceWall);
 	m_game_objects.push_back(m_topMainWall);
 	m_game_objects.push_back(m_southMainWall);
+	m_game_objects.push_back(m_southInnerWall);
+	m_game_objects.push_back(m_southAngledWall);
+	m_game_objects.push_back(m_southEastWall);
+	m_game_objects.push_back(m_mainEastWall);
+	m_game_objects.push_back(m_mainNorthWall);
+	m_game_objects.push_back(m_mainWestWall);
+	m_game_objects.push_back(m_splitterWall);
 
 
 	m_game_objects.push_back(m_options);
@@ -322,6 +386,7 @@ example_layer::example_layer()
 	m_game_objects.push_back(m_spell);
 	m_game_objects.push_back(m_mannequin);
 	//m_game_objects.push_back(m_cow);
+	m_game_objects.push_back(m_mimic);
 	//m_game_objects.push_back(m_tree);
 	//m_game_objects.push_back(m_pickup);
 	m_physics_manager = engine::bullet_manager::create(m_game_objects);
@@ -339,6 +404,8 @@ example_layer::~example_layer() {}
 
 void example_layer::on_update(const engine::timestep& time_step) 
 {
+	glm::vec3 enemy_pos = m_enemy.object()->position();
+
 	if (m_gameStart)
 	{
 		if (freeCam)
@@ -363,6 +430,9 @@ void example_layer::on_update(const engine::timestep& time_step)
 	m_cow_box.on_update(m_cow->position() - glm::vec3(0.f, m_cow->offset().y, 0.f)
 		* m_cow->scale(), m_cow->rotation_amount(), m_cow->rotation_axis());
 
+	m_mimic_box.on_update(m_mimic->position() - glm::vec3(0.f, m_mimic->offset().y, 0.f)
+		* m_mimic->scale(), m_mimic->rotation_amount(), m_mimic->rotation_axis());
+
 	m_barrel_box.on_update(m_barrel->position() - glm::vec3(0.f, m_barrel->offset().y, 0.f)
 		* m_barrel->scale(), m_barrel->rotation_amount(), m_barrel->rotation_axis());
 
@@ -385,6 +455,12 @@ void example_layer::on_update(const engine::timestep& time_step)
 	if (m_spell->is_colliding() && m_spell->collision_objects().size() > 1)
 	{
 		std::cout << "collision is taking place";
+	}
+
+	if (m_cow_box.collision(m_player.getBox()))
+	{
+		m_enemy.object()->set_position(enemy_pos);
+		std::cout << "Cow is colliding" << '\n';
 	}
 } 
 
@@ -416,6 +492,13 @@ void example_layer::on_render()
 	engine::renderer::submit(mesh_shader, m_topEntranceWall);
 	engine::renderer::submit(mesh_shader, m_topMainWall);
 	engine::renderer::submit(mesh_shader, m_southMainWall);
+	engine::renderer::submit(mesh_shader, m_southInnerWall);
+	engine::renderer::submit(mesh_shader, m_southAngledWall);
+	engine::renderer::submit(mesh_shader, m_southEastWall);
+	engine::renderer::submit(mesh_shader, m_mainEastWall);
+	engine::renderer::submit(mesh_shader, m_mainNorthWall);
+	engine::renderer::submit(mesh_shader, m_mainWestWall);
+	engine::renderer::submit(mesh_shader, m_splitterWall);
 
 	m_barrel_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
@@ -423,6 +506,9 @@ void example_layer::on_render()
 	m_player.getBox().on_render(2.5f, 0.f, 0.f, mesh_shader);
 
 	m_cow_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+
+	m_mimic_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+
 
 	engine::renderer::submit(mesh_shader, m_barrel);
 
@@ -443,6 +529,12 @@ void example_layer::on_render()
 	cow_transform = glm::rotate(cow_transform, m_cow->rotation_amount(), m_cow->rotation_axis());
 	cow_transform = glm::scale(cow_transform, m_cow->scale());
 	engine::renderer::submit(mesh_shader, cow_transform, m_cow);
+
+	glm::mat4 mimic_transform(1.0f);
+	mimic_transform = glm::translate(mimic_transform, m_mimic->position());
+	mimic_transform = glm::rotate(mimic_transform, m_mimic->rotation_amount(), m_mimic->rotation_axis());
+	mimic_transform = glm::scale(mimic_transform, m_mimic->scale());
+	engine::renderer::submit(mesh_shader, mimic_transform, m_mimic);
 
 	m_arcane_blast.on_render(mesh_shader);
 

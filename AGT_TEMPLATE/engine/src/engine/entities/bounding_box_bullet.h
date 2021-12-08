@@ -12,6 +12,7 @@ namespace engine
 		void set_box(float width, float height, float depth, glm::vec3 bottom);
 		void on_update(glm::vec3 position, float rotation, glm::vec3 axis);
 		void on_render(float r, float g, float b, const engine::ref<engine::shader>& shader);
+		bool collision(engine::bounding_box other_box);
 	private:
 		glm::vec3 m_position;
 		float m_width;
