@@ -36,7 +36,7 @@ public:
 
 	void setHealth(float hp) { health = hp; };
 
-	void receivedHit() { health -= 10; };
+	void receivedHit(int dmg) { health -= dmg; };
 
 	void heal() { health += 25; };
 

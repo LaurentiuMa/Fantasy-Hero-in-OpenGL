@@ -8,6 +8,7 @@ void enemy::initialise(engine::ref<engine::game_object> object, glm::vec3 positi
 	m_object = object;
 	m_object->set_forward(forward);
 	m_object->set_position(position);
+	health = 100;
 }
 void enemy::on_update(const engine::timestep& time_step, const glm::vec3& player_position)
 {

@@ -25,6 +25,11 @@ public:
 	void chase_player(const engine::timestep& time_step, const glm::vec3&
 		player_position);
 	bool rest(const engine::timestep& time_step);
+
+	void takeDamage(int dmg) { health -= dmg; };
+
+	int getHealth() { return health; };
+
 	// game object bound to the enemy
 	engine::ref<engine::game_object> object() const { return m_object; }
 private:
@@ -57,4 +62,6 @@ private:
 	float restTime = defaultrestTime;
 	float restBeginTime;
 	glm::vec3 velocityBegin;
+
+	int health;
 };

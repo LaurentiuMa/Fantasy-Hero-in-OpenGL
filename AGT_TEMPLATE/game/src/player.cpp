@@ -98,7 +98,7 @@ void player::update_tp_camera(engine::perspective_camera& camera)
 void player::update_fp_camera(engine::perspective_camera& camera)
 {
 
-	float camPosAbove = 0.5f + cam_wobble;
+	float camPosAbove = 0.0f + cam_wobble;
 	float camPosFront = 0.2f;
 	float camLookAheadAt = 6.f;
 

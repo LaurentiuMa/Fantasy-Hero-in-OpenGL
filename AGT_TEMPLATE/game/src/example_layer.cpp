@@ -35,6 +35,7 @@ example_layer::example_layer()
 	healingAvailable = false;
 	spawnPotion = true;
 	lightningAvailable = false;
+	lightningPickup = true;
 	blastAvailable = true;
 	drawBoundingBoxes = false;
 	unawareMimicKilled = false;
@@ -522,7 +523,8 @@ example_layer::example_layer()
 
 	m_skinned_mesh->switch_animation(1);
 
-	m_cross_fade = cross_fade::create("assets/textures/green.bmp", 1.0f, 1.6f, 0.9f);
+	m_cross_fade_healing = cross_fade::create("assets/textures/green.bmp", 1.0f, 1.6f, 0.9f);
+	m_cross_fade_damage = cross_fade::create("assets/textures/red.bmp", 1.0f, 1.6f, 0.9f);
 
 	m_billboard = billboard::create("assets/textures/Explosion.tga", 4, 5, 16);
 
@@ -600,7 +602,8 @@ void example_layer::on_update(const engine::timestep& time_step)
 
 	m_audio_manager->update_with_camera(m_3d_camera);
 
-	m_cross_fade->on_update(time_step);
+	m_cross_fade_healing->on_update(time_step);
+	m_cross_fade_damage->on_update(time_step);
 
 
 	if (m_cow_box.collision(m_player.getBox()))
@@ -612,6 +615,7 @@ void example_layer::on_update(const engine::timestep& time_step)
 	{
 		m_player.increaseSpeed();
 		std::cout << "collision with lemur";
+		lemurAlive = false;
 	}
 
 	if (glm::length(m_spell->position() - m_mimic->position()) < 2.f)
@@ -637,11 +641,7 @@ void example_layer::on_update(const engine::timestep& time_step)
 		m_lightning_bolts.at(i)->on_update(time_step);
 	}
 
-	if (abs(glm::length(m_player.position() - m_potion->position())) < 2.f && spawnPotion == true)
-	{
-		healingAvailable = true;
-		spawnPotion = false;
-	}
+	
 	if (glm::length(m_player.position() - m_grenadePickup->position()) < 3.f && unawareMimicKilled == true)
 	{
 		blastAvailable = true;
@@ -650,8 +650,20 @@ void example_layer::on_update(const engine::timestep& time_step)
 		std::cout << "grenade picked up" << '\n';
 	}
 
-	std::cout << "blastAvailable: " << blastAvailable << ", unawareMimicKilled" << unawareMimicKilled <<
-		", spawnGrenade: " << spawnGrenade << ", mimicAlive: " << mimicAlive << '\n';
+	if (abs(glm::length(m_player.position() - m_potion->position())) < 2.f && spawnPotion == true)
+	{
+		healingAvailable = true;
+		spawnPotion = false;
+	}
+
+	if (glm::length(m_player.position() - m_lightningPickup->position()) < 2.f && lightningPickup == true)
+	{
+		lightningAvailable = true;
+		lightningPickup = false;
+	}
+
+	/*std::cout << "blastAvailable: " << blastAvailable << ", unawareMimicKilled" << unawareMimicKilled <<
+		", spawnGrenade: " << spawnGrenade << ", mimicAlive: " << mimicAlive << '\n';*/
 
 } 
 
@@ -736,7 +748,6 @@ void example_layer::on_render()
 		grenade_transform = glm::scale(grenade_transform, m_grenadePickup->scale());
 		engine::renderer::submit(mesh_shader, grenade_transform, m_grenadePickup);
 	}
-	
 
 	glm::mat4 table_transform(1.0f);
 	table_transform = glm::translate(table_transform, m_table->position());
@@ -744,11 +755,15 @@ void example_layer::on_render()
 	table_transform = glm::scale(table_transform, m_table->scale());
 	engine::renderer::submit(mesh_shader, table_transform, m_table);
 
-	glm::mat4 cow_transform(1.0f);
-	cow_transform = glm::translate(cow_transform, m_cow->position());
-	cow_transform = glm::rotate(cow_transform, m_cow->rotation_amount(), m_cow->rotation_axis());
-	cow_transform = glm::scale(cow_transform, m_cow->scale());
-	engine::renderer::submit(mesh_shader, cow_transform, m_cow);
+	if (m_enemy.getHealth() > 0)
+	{
+		glm::mat4 cow_transform(1.0f);
+		cow_transform = glm::translate(cow_transform, m_cow->position());
+		cow_transform = glm::rotate(cow_transform, m_cow->rotation_amount(), m_cow->rotation_axis());
+		cow_transform = glm::scale(cow_transform, m_cow->scale());
+		engine::renderer::submit(mesh_shader, cow_transform, m_cow);
+	}
+	
 
 	if (mimicAlive == true)
 	{
@@ -793,7 +808,7 @@ void example_layer::on_render()
 	potion_transform = glm::scale(potion_transform, glm::vec3(.1f));
 	potion_transform = glm::rotate(potion_transform, -.9f, glm::vec3(0.f, 1.f, 0.f));
 	engine::renderer::submit(mesh_shader, potion_transform, m_potion);*/
-
+	
 	/*for (auto j = 0; j < 6; j++)
 	{
 		for (auto i = 0; i < 6; i++)
@@ -836,7 +851,7 @@ void example_layer::on_render()
 	yy_barrel_transform = glm::scale(yy_barrel_transform, glm::vec3(.01f));
 	engine::renderer::submit(mesh_shader, yy_barrel_transform, m_barrel);
 
-	if (m_lightningPickup)
+	if (lightningPickup == true)
 	{
 		glm::mat4 bolt_transform(1.0f);
 		bolt_transform = glm::translate(bolt_transform, m_lightningPickup->position());
@@ -979,7 +994,11 @@ void example_layer::on_render()
 	m_text_manager->render_text(text_shader, "Health: " + std::to_string(m_player.getHealth()) , 10.f, (float)engine::application::window().height() - 75.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
 
 	engine::renderer::begin_scene(m_2d_camera, mesh_shader);
-	m_cross_fade->on_render(mesh_shader);
+	m_cross_fade_healing->on_render(mesh_shader);
+	engine::renderer::end_scene();
+
+	engine::renderer::begin_scene(m_2d_camera, mesh_shader);
+	m_cross_fade_damage->on_render(mesh_shader);
 	engine::renderer::end_scene();
 
 	engine::renderer::begin_scene(m_3d_camera, mesh_shader);
@@ -1031,16 +1050,24 @@ void example_layer::on_event(engine::event& event)
 		}
 		if (e.key_code() == engine::key_codes::KEY_3 && healingAvailable)
 		{
-			m_cross_fade->activate();
+			m_cross_fade_healing->activate();
 			m_player.heal();
 			healingAvailable = false;
 			spawnPotion = false;
 		}
-		if (e.key_code() == engine::key_codes::KEY_4)
+		if (e.key_code() == engine::key_codes::KEY_4 && lightningAvailable == true)
 		{
 			for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
 				m_lightning_bolts.at(i)->activate(m_player.position(), m_player.getForward());
 			}
+			if (glm::length(m_player.position() - m_cow->position()) < 4.f)
+			{
+				m_enemy.takeDamage(10);
+				std::cout << m_enemy.getHealth();
+				m_player.receivedHit(12);
+				m_cross_fade_damage->activate();
+			}
+
 		}
 		if (e.key_code() == engine::key_codes::KEY_8)
 		{

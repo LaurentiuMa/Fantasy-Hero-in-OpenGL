@@ -20,10 +20,10 @@ void lightning_bolt::compute_path()
 	glm::vec3 d = m_direction;
 	for (int i = 1; i < 10; i++) {
 		int hi = rand();
-		float r1 = (rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-		float r2 = (rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-		float r3 = (rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-		float r4 = (rand() / (float)RAND_MAX) * 2.0f - 1.0f;
+		float r1 = (rand() / (float)RAND_MAX) - 1.0f;
+		float r2 = (rand() / (float)RAND_MAX) - 1.0f;
+		float r3 = (rand() / (float)RAND_MAX) - 1.0f;
+		float r4 = (rand() / (float)RAND_MAX) - 1.0f;
 
 		glm::vec3 p = m_vertices[i - 1].position + 1.5f * m_direction * (1 + r4) + glm::vec3(r1, r2/1.5f, r3) * 0.25f;
 		m_vertices.push_back(engine::mesh::vertex(p, glm::vec3(0.f, 1.f, 0.f), glm::vec2(0.0f)));

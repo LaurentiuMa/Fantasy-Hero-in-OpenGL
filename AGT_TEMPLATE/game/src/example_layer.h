@@ -82,6 +82,7 @@ private:
 	engine::bounding_box				m_potion_box;
 
 
+
 	engine::ref<engine::material>		m_material{};
 	engine::ref<engine::material>		m_mannequin_material{};
 	engine::ref<engine::material>		m_lightsource_material{};
@@ -111,7 +112,9 @@ private:
 	glm::vec3							enemy_pos;
 	glm::vec3							grenadeSpawn;
 
-	engine::ref<cross_fade>							m_cross_fade{};
+	engine::ref<cross_fade>							m_cross_fade_healing{};
+	engine::ref<cross_fade>							m_cross_fade_damage{};
+
 	std::vector<engine::ref<lightning_bolt>>		m_lightning_bolts{};
 	engine::ref<billboard>							m_billboard{};
 
@@ -136,4 +139,6 @@ private:
 	bool								lightningPickup;
 
 	float								boltRotation;
+
+	float								lightningRadius{4.f};
 };
