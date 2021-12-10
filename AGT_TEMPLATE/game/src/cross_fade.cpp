@@ -23,7 +23,7 @@ void cross_fade::on_update(const engine::timestep& time_step)
 
 	m_timer += (float)time_step;
 
-	m_transparency = 0.8f - 0.8f * m_timer / m_max_time;
+	m_transparency = 0.2f - 0.2f * m_timer / m_max_time;
 
 	if (m_timer > m_max_time)
 		s_active = false;

@@ -32,6 +32,14 @@ public:
 	}
 	engine::bounding_box& getBox() { return m_player_box; };
 
+	int getHealth() { return health; };
+
+	void setHealth(float hp) { health = hp; };
+
+	void receivedHit() { health -= 10; };
+
+	void heal() { health += 25; };
+
 	glm::vec3 getForward() { return m_object->forward(); };
 
 private:
@@ -41,6 +49,7 @@ private:
 	float m_timer;
 	float cam_wobble;
 	float wobble_modifier;
+	float health;
 
 	engine::ref< engine::game_object> m_object;
 	engine::bounding_box m_player_box;

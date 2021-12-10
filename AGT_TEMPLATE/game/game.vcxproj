@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\billboard.h" />
     <ClInclude Include="src\cross_fade.h" />
     <ClInclude Include="src\enemy.h" />
     <ClInclude Include="src\example_layer.h" />
@@ -142,6 +143,7 @@
     <ClInclude Include="src\quad.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\billboard.cpp" />
     <ClCompile Include="src\cross_fade.cpp" />
     <ClCompile Include="src\enemy.cpp" />
     <ClCompile Include="src\example_layer.cpp" />

@@ -19,6 +19,7 @@ void player::initialise(engine::ref<engine::game_object> object)
 	m_object->set_forward(glm::vec3(0.f, 0.f, -1.f));
 	m_object->set_position(glm::vec3(0.f, 0.9f, 10.f));	m_object->animated_mesh()->set_default_animation(1);
 	m_object->set_angular_factor_lock(true);
+	health = 100;
 }
 
 void player::on_update(const engine::timestep& time_step)
@@ -120,7 +121,7 @@ void player::jump()
 
 glm::vec3 player::equipment_position()
 {
-	float equipmentPosAbove = 0.8f;
+	float equipmentPosAbove = 0.2f;
 	float equipmentPosFront = 0.5f;
 
 	return m_object->position() + equipmentPosFront * m_object->forward() + glm::vec3(0, equipmentPosAbove, 0);

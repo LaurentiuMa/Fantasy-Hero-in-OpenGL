@@ -17,7 +17,7 @@ void arcane_blast::initialise(engine::ref<engine::game_object> object)
 void arcane_blast::throw_spell(const engine::perspective_camera& camera, float throw_spell)
 {
 	m_object->set_velocity(glm::vec3(0.f));
-	m_object->set_acceleration(glm::vec3(0.f, -2.f, 0.f));
+	m_object->set_acceleration(glm::vec3(0.f, -1.f, 0.f));
 	m_object->set_torque(glm::vec3(0.f));
 	m_object->set_rotation_amount(0.f);
 	m_object->set_rotation_axis(glm::vec3(0.f, 1.f, 0.f));

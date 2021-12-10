@@ -11,6 +11,7 @@
 #include "lemur.h"
 #include "cross_fade.h"
 #include "lightning_bolt.h"
+#include "billboard.h"
 
 
 
@@ -49,6 +50,8 @@ private:
 	engine::ref<engine::game_object>	m_barrel{};
 	engine::ref<engine::game_object>	m_sword{};
 	engine::ref<engine::game_object>	m_ball{};
+	engine::ref<engine::game_object>	m_grenadePickup{};
+	engine::ref<engine::game_object>	m_lightningPickup{};
 
 	engine::ref<engine::game_object>	m_westEntranceWall{};
 	engine::ref<engine::game_object>	m_eastEntranceWall{};
@@ -76,10 +79,12 @@ private:
 	engine::bounding_box				m_cow_box;
 	engine::bounding_box				m_lemur_box;
 	engine::bounding_box				m_mimic_box;
+	engine::bounding_box				m_potion_box;
 
 
 	engine::ref<engine::material>		m_material{};
 	engine::ref<engine::material>		m_mannequin_material{};
+	engine::ref<engine::material>		m_lightsource_material{};
 
 
 	engine::DirectionalLight            m_directionalLight;
@@ -104,9 +109,31 @@ private:
 	float								wallLength, wallDepth, wallWidth;
 
 	glm::vec3							enemy_pos;
+	glm::vec3							grenadeSpawn;
 
 	engine::ref<cross_fade>							m_cross_fade{};
 	std::vector<engine::ref<lightning_bolt>>		m_lightning_bolts{};
+	engine::ref<billboard>							m_billboard{};
 
 
+	engine::PointLight					m_pointLight_three;
+	uint32_t							num_point_lights = 1;
+
+	engine::SpotLight					m_intro_spotLight;
+	uint32_t							num_spot_lights = 1;
+
+	bool								healingAvailable;
+	bool								spawnPotion;
+	bool								spawnGrenade;
+	bool								lightningAvailable;
+	bool								blastAvailable;
+	bool								drawBoundingBoxes;
+	bool								unawareMimicKilled;
+	bool								grenadePickedup;
+	bool								mimicAlive;
+	bool								cowAlive;
+	bool								lemurAlive;
+	bool								lightningPickup;
+
+	float								boltRotation;
 };

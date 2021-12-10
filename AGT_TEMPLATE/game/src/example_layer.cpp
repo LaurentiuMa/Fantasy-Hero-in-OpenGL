@@ -32,6 +32,19 @@ example_layer::example_layer()
 	freeCam = true;
 	m_active_spell = false;
 	m_active_spell_timer = 0.0f;
+	healingAvailable = false;
+	spawnPotion = true;
+	lightningAvailable = false;
+	blastAvailable = true;
+	drawBoundingBoxes = false;
+	unawareMimicKilled = false;
+	grenadePickedup = false;
+	mimicAlive = true;
+	lemurAlive = true;
+	cowAlive = true;
+	spawnGrenade = false;
+
+	boltRotation = 0;
 
 	m_3d_camera.position(glm::vec3(0, -20.f, 13.0));
 
@@ -40,15 +53,31 @@ example_layer::example_layer()
 	auto text_shader = engine::renderer::shaders_library()->get("text_2D");
 
 	m_directionalLight.Color = glm::vec3(1.0f, 1.0f, 1.0f);
-	m_directionalLight.AmbientIntensity = 0.25f;
-	m_directionalLight.DiffuseIntensity = 0.6f;
+	m_directionalLight.AmbientIntensity = 0.05f;
+	m_directionalLight.DiffuseIntensity = 0.1f;
 	m_directionalLight.Direction = glm::normalize(glm::vec3(1.0f, -1.0f, 0.0f));
+
+	m_pointLight_three.Color = glm::vec3(1.f, 1.0f, 1.f);
+	m_pointLight_three.AmbientIntensity = 0.15f;
+	m_pointLight_three.DiffuseIntensity = 0.2f;
+	m_pointLight_three.Position = glm::vec3(10.82f, 3.0f, -5.97f);
+
+	m_intro_spotLight.Color = glm::vec3(1.0f, 1.0f, 1.0f);
+	m_intro_spotLight.AmbientIntensity = 1.f;
+	m_intro_spotLight.DiffuseIntensity = 0.6f;
+	m_intro_spotLight.Position = glm::vec3(-3.f, -20.0f, 13.f);
+	m_intro_spotLight.Direction = glm::vec3(0,0,-1);
+	m_intro_spotLight.Cutoff = 0.8f;
+	m_intro_spotLight.Attenuation.Constant = 1.0f;
+	m_intro_spotLight.Attenuation.Linear = 0.001f;
+	m_intro_spotLight.Attenuation.Exp = 0.01f;
+
 
 	// set color texture unit
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->bind();
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("lighting_on", true);
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("gColorMap", 0);
-	m_directionalLight.submit(mesh_shader);
+	//m_directionalLight.submit(mesh_shader);
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("gMatSpecularIntensity", 1.f);
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("gSpecularPower", 10.f);
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("transparency", 1.0f);
@@ -59,6 +88,12 @@ example_layer::example_layer()
 		(float)engine::application::window().height()));
 	m_material = engine::material::create(1.0f, glm::vec3(1.0f, 0.1f, 0.07f),
 		glm::vec3(1.0f, 0.1f, 0.07f), glm::vec3(0.5f, 0.5f, 0.5f), 1.0f);
+
+	m_lightsource_material = engine::material::create(1.0f, m_pointLight_three.Color,
+		m_pointLight_three.Color, m_pointLight_three.Color, 1.0f);
+
+	m_lightsource_material = engine::material::create(1.0f, m_intro_spotLight.Color,
+		m_intro_spotLight.Color, m_intro_spotLight.Color, 1.0f);
 
 	m_mannequin_material = engine::material::create(1.0f, glm::vec3(0.5f, 0.5f, 0.5f),
 		glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f), 1.0f);
@@ -224,8 +259,7 @@ example_layer::example_layer()
 	cow_props.textures = cow_model->textures();
 	float cow_scale = 1.f / glm::max(cow_model->size().x, glm::max(cow_model->size().y,
 		cow_model->size().z));
-	//cow_props.position = { 7.f,0.5f, -5.f };
-	cow_props.position = { 7.f,0.5f, -1.f };
+	cow_props.position = { 7.f,0.5f, -5.f };
 	cow_props.scale = glm::vec3(cow_scale);
 	cow_props.bounding_shape = cow_model->size() / 2.f;
 	cow_props.type = 0;
@@ -248,7 +282,7 @@ example_layer::example_layer()
 	float mimic_scale = 1.f / glm::max(mimic_model->size().x, glm::max(mimic_model->size().y,
 		mimic_model->size().z));
 	//mimic_props.position = { 7.f,0.5f, -5.f };
-	mimic_props.position = { 7.f,1.0f, 1.f };
+	mimic_props.position = { 1.f,1.0f, -14.f };
 	mimic_props.rotation_amount = glm::pi<float>();
 	mimic_props.rotation_axis = glm::vec3(0,1.f,0);
 	mimic_props.scale = glm::vec3(mimic_scale) ;
@@ -315,6 +349,19 @@ example_layer::example_layer()
 	sword_props.bounding_shape = sword_model->size() / 2.f * sword_scale;
 	m_sword = engine::game_object::create(sword_props);
 
+	// Mesh downloaded from https://opengameart.org/content/bolt
+	engine::ref <engine::model> bolt_shape = engine::model::create("assets/models/static/speed2.obj");
+	engine::game_object_properties bolt_props;
+	bolt_props.position = { 1.f,0.5f, -1.f };
+	bolt_props.scale = { .5f,.5f,.5f };
+	bolt_props.meshes = bolt_shape->meshes();
+	bolt_props.textures = bolt_shape->textures();
+	bolt_props.type = 0;
+	bolt_props.bounding_shape = bolt_shape->size();
+	bolt_props.restitution = 0.85f;
+	bolt_props.mass = 0.45f;
+	bolt_props.rolling_friction = 0.1f;
+	m_lightningPickup = engine::game_object::create(bolt_props);;
 
 	// Load the tree model. Create a tree object. Set its properties
 	//engine::ref <engine::model> tree_model = engine::model::create("assets/models/static/elm.3ds");
@@ -337,14 +384,13 @@ example_layer::example_layer()
 	torchLight_props.mass = 0.45f;
 	torchLight_props.scale = glm::vec3(0.1f);
 	torchLight_props.rolling_friction = 0.1f;
-	m_spell = engine::game_object::create(torchLight_props);
 
 	m_torchLight = engine::game_object::create(torchLight_props);
 
-	//engine::ref<engine::sphere> spell_shape = engine::sphere::create(10, 20, 0.1f);
-	engine::ref <engine::model> spell_shape = engine::model::create("assets/models/static/newSoccerBall.3ds");
+	//model downloaded from https://free3d.com/3d-model/grenade-443268.html
+	engine::ref <engine::model> spell_shape = engine::model::create("assets/models/static/Grenade2.obj");
 	engine::game_object_properties spell_props;
-	spell_props.position = { 0.f, 5.f, -5.f };
+	spell_props.position = { 0.f, 20.f, -5.f };
 	spell_props.meshes = spell_shape->meshes();
 	spell_props.textures = spell_shape->textures();
 	spell_props.type = 1;
@@ -353,6 +399,22 @@ example_layer::example_layer()
 	spell_props.mass = 0.45f;
 	spell_props.rolling_friction = 0.1f;
 	m_spell = engine::game_object::create(spell_props);
+
+	
+
+	//model downloaded from https://free3d.com/3d-model/grenade-443268.html
+	engine::ref <engine::model> grenade_shape = engine::model::create("assets/models/static/Grenade2.obj");
+	engine::game_object_properties grenade_props;
+	grenade_props.position = { 0.f,2.f, -13.f };
+	grenade_props.meshes = grenade_shape->meshes();
+	grenade_props.textures = grenade_shape->textures();
+	grenade_props.type = 0;
+	grenade_props.bounding_shape = grenade_shape->size();
+	grenade_props.restitution = 0.85f;
+	grenade_props.mass = 0.45f;
+	grenade_props.rolling_friction = 0.1f;
+	m_grenadePickup = engine::game_object::create(grenade_props);
+
 
 	float radius = 0.1f;
 	engine::ref<engine::sphere>sphere_shape = engine::sphere::create(10, 20, radius);
@@ -381,17 +443,33 @@ example_layer::example_layer()
 	engine::ref<engine::potion> potion_shape =
 		engine::potion::create();
 	engine::game_object_properties potion_props;
-	potion_props.position = { 0.f, 0.f, 0.f };
+	potion_props.position = { 4.f, .5f, -6.f };
+	engine::ref<engine::texture_2d> potion_texture =
+		engine::texture_2d::create("assets/textures/healthTex.png", true);
+	potion_props.textures = { potion_texture };
 	potion_props.meshes = { potion_shape->mesh() };
 	potion_props.scale = glm::vec3(.1f, .1f, .1f);
+	potion_props.rotation_amount = glm::pi<float>() / 4;
+	potion_props.rotation_axis = glm::vec3(0, 1.f, 0);
+	potion_props.type = 1;
+	potion_props.bounding_shape = glm::vec3(.5f);
+	potion_props.restitution = 0.92f;
+	potion_props.mass = 1.0f;
 	m_potion = engine::game_object::create(potion_props);
 
 	engine::ref<engine::table> table_shape =
 		engine::table::create();
 	engine::game_object_properties table_props;
-	table_props.position = { 0.f, 0.f, 0.f };
+	table_props.position = { 2.f, .5f, -10.f };
+	engine::ref<engine::texture_2d> table_texture =
+		engine::texture_2d::create("assets/textures/darkWood.jpg", true);
+	table_props.textures = { table_texture };
 	table_props.meshes = { table_shape->mesh() };
-	table_props.scale = glm::vec3(.1f, .1f, .1f);
+	table_props.type = 1;
+	table_props.bounding_shape = glm::vec3(.5f);
+	table_props.restitution = 0.92f;
+	table_props.mass = 1.0f;
+	table_props.scale = glm::vec3(0.1f);
 	m_table = engine::game_object::create(table_props);
 
 	engine::ref<engine::torch> torch_shape =
@@ -427,9 +505,11 @@ example_layer::example_layer()
 
 	m_game_objects.push_back(m_barrel);
 	m_game_objects.push_back(m_sword);
+	m_game_objects.push_back(m_lightningPickup);
 
 	//m_game_objects.push_back(m_ball);
-	m_game_objects.push_back(m_spell);
+	//m_game_objects.push_back(m_spell);
+	m_game_objects.push_back(m_grenadePickup);
 	m_game_objects.push_back(m_mannequin);
 	//m_game_objects.push_back(m_cow);
 	//m_game_objects.push_back(m_mimic);
@@ -442,7 +522,9 @@ example_layer::example_layer()
 
 	m_skinned_mesh->switch_animation(1);
 
-	m_cross_fade = cross_fade::create("assets/textures/green.bmp", 2.0f, 1.6f, 0.9f);
+	m_cross_fade = cross_fade::create("assets/textures/green.bmp", 1.0f, 1.6f, 0.9f);
+
+	m_billboard = billboard::create("assets/textures/Explosion.tga", 4, 5, 16);
 
 	m_arcane_blast.initialise(m_spell);
 
@@ -470,13 +552,19 @@ void example_layer::on_update(const engine::timestep& time_step)
 		}
 	}
 
+
 	m_player.on_update(time_step);
 
 	m_enemy.on_update(time_step, m_player.object()->position());
 
-	m_mimicNPC.on_update(time_step, m_player.object()->position());
+	if (mimicAlive == true)
+	{
+		m_mimicNPC.on_update(time_step, m_player.object()->position());
+	}
 
 	m_lemurNPC.on_update(time_step, m_player.object()->position());
+
+	m_billboard->on_update(time_step);
 
 		
 	/*m_player_box.on_update(m_player.object()->position() - glm::vec3(0.f,
@@ -503,6 +591,7 @@ void example_layer::on_update(const engine::timestep& time_step)
 	{
 		m_active_spell = false;
 		m_active_spell_timer = 0.f;
+
 	}
 
 	m_arcane_blast.on_update(time_step);
@@ -513,12 +602,6 @@ void example_layer::on_update(const engine::timestep& time_step)
 
 	m_cross_fade->on_update(time_step);
 
-	check_bounce();
-
-	if (m_spell->is_colliding() && m_spell->collision_objects().size() > 1)
-	{
-		std::cout << "collision is taking place";
-	}
 
 	if (m_cow_box.collision(m_player.getBox()))
 	{
@@ -531,9 +614,45 @@ void example_layer::on_update(const engine::timestep& time_step)
 		std::cout << "collision with lemur";
 	}
 
+	if (glm::length(m_spell->position() - m_mimic->position()) < 2.f)
+	{
+		m_billboard->activate(glm::vec3(m_mimic->position()), 4.f, 4.f);
+		mimicAlive = false;
+
+		if (m_mimicNPC.getState() != state::aware)
+		{
+			std::cout << "grenade collision with unaware mimic" << '\n';
+			grenadeSpawn = m_mimic->position();
+			spawnGrenade = true;
+			unawareMimicKilled = true;
+		}
+		else
+		{
+			std::cout << "grenade collision with aware mimic" << '\n';
+			unawareMimicKilled = false;
+		}
+	}
+
 	for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
 		m_lightning_bolts.at(i)->on_update(time_step);
 	}
+
+	if (abs(glm::length(m_player.position() - m_potion->position())) < 2.f && spawnPotion == true)
+	{
+		healingAvailable = true;
+		spawnPotion = false;
+	}
+	if (glm::length(m_player.position() - m_grenadePickup->position()) < 3.f && unawareMimicKilled == true)
+	{
+		blastAvailable = true;
+		unawareMimicKilled = false;
+		spawnGrenade = false;
+		std::cout << "grenade picked up" << '\n';
+	}
+
+	std::cout << "blastAvailable: " << blastAvailable << ", unawareMimicKilled" << unawareMimicKilled <<
+		", spawnGrenade: " << spawnGrenade << ", mimicAlive: " << mimicAlive << '\n';
+
 } 
 
 void example_layer::on_render() 
@@ -572,16 +691,19 @@ void example_layer::on_render()
 	engine::renderer::submit(mesh_shader, m_mainWestWall);
 	engine::renderer::submit(mesh_shader, m_splitterWall);
 
-	m_barrel_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+	if (drawBoundingBoxes == true)
+	{
+		m_barrel_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
+		m_player.getBox().on_render(2.5f, 0.f, 0.f, mesh_shader);
 
-	m_player.getBox().on_render(2.5f, 0.f, 0.f, mesh_shader);
+		m_cow_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
-	m_cow_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+		m_mimic_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
-	m_mimic_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
-
-	m_lemur_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+		m_lemur_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+	}
+	
 
 
 	engine::renderer::submit(mesh_shader, m_barrel);
@@ -597,41 +719,75 @@ void example_layer::on_render()
 	tree_transform = glm::rotate(tree_transform, m_tree->rotation_amount(), m_tree->rotation_axis());
 	tree_transform = glm::scale(tree_transform, m_tree->scale());
 	engine::renderer::submit(mesh_shader, tree_transform, m_tree);*/
+
+	if (spawnPotion == true)
+	{
+		glm::mat4 potion_transform(1.0f);
+		potion_transform = glm::translate(potion_transform, m_potion->position());
+		potion_transform = glm::rotate(potion_transform, m_potion->rotation_amount(), m_potion->rotation_axis());
+		potion_transform = glm::scale(potion_transform, m_potion->scale());
+		engine::renderer::submit(mesh_shader, potion_transform, m_potion);
+	}
+	if (unawareMimicKilled == true && spawnGrenade == true)
+	{ 
+		glm::mat4 grenade_transform(1.0f);
+		grenade_transform = glm::translate(grenade_transform, grenadeSpawn);
+		grenade_transform = glm::rotate(grenade_transform, m_grenadePickup->rotation_amount(), m_grenadePickup->rotation_axis());
+		grenade_transform = glm::scale(grenade_transform, m_grenadePickup->scale());
+		engine::renderer::submit(mesh_shader, grenade_transform, m_grenadePickup);
+	}
 	
+
+	glm::mat4 table_transform(1.0f);
+	table_transform = glm::translate(table_transform, m_table->position());
+	table_transform = glm::rotate(table_transform, m_table->rotation_amount(), m_table->rotation_axis());
+	table_transform = glm::scale(table_transform, m_table->scale());
+	engine::renderer::submit(mesh_shader, table_transform, m_table);
+
 	glm::mat4 cow_transform(1.0f);
 	cow_transform = glm::translate(cow_transform, m_cow->position());
 	cow_transform = glm::rotate(cow_transform, m_cow->rotation_amount(), m_cow->rotation_axis());
 	cow_transform = glm::scale(cow_transform, m_cow->scale());
 	engine::renderer::submit(mesh_shader, cow_transform, m_cow);
 
-	glm::mat4 mimic_transform(1.0f);
-	mimic_transform = glm::translate(mimic_transform, m_mimic->position());
-	mimic_transform = glm::rotate(mimic_transform, m_mimic->rotation_amount(), m_mimic->rotation_axis());
-	mimic_transform = glm::scale(mimic_transform, m_mimic->scale());
-	engine::renderer::submit(mesh_shader, mimic_transform, m_mimic);
+	if (mimicAlive == true)
+	{
+		glm::mat4 mimic_transform(1.0f);
+		mimic_transform = glm::translate(mimic_transform, m_mimic->position());
+		mimic_transform = glm::rotate(mimic_transform, m_mimic->rotation_amount(), m_mimic->rotation_axis());
+		mimic_transform = glm::scale(mimic_transform, m_mimic->scale());
+		engine::renderer::submit(mesh_shader, mimic_transform, m_mimic);
+	}
 
-	glm::mat4 lemur_transform(1.0f);
-	lemur_transform = glm::translate(lemur_transform, m_lemur->position());
-	lemur_transform = glm::rotate(lemur_transform, m_lemur->rotation_amount(), m_lemur->rotation_axis());
-	lemur_transform = glm::scale(lemur_transform, m_lemur->scale());
-	engine::renderer::submit(mesh_shader, lemur_transform, m_lemur);
+	if (lemurAlive == true)
+	{
+		glm::mat4 lemur_transform(1.0f);
+		lemur_transform = glm::translate(lemur_transform, m_lemur->position());
+		lemur_transform = glm::rotate(lemur_transform, m_lemur->rotation_amount(), m_lemur->rotation_axis());
+		lemur_transform = glm::scale(lemur_transform, m_lemur->scale());
+		engine::renderer::submit(mesh_shader, lemur_transform, m_lemur);
+	}
+	
+	glm::mat4 flipped_table_transform(1.0f);
+	flipped_table_transform = glm::translate(flipped_table_transform, glm::vec3(3.8f,1.25f,-11.f));
+	flipped_table_transform = glm::rotate(flipped_table_transform, glm::pi<float>(), glm::vec3(1.f,0,0));
+	flipped_table_transform = glm::rotate(flipped_table_transform, glm::pi<float>()/4, glm::vec3(0, 1.f, 0));
+	flipped_table_transform = glm::scale(flipped_table_transform, glm::vec3(.01f));
+	engine::renderer::submit(mesh_shader, flipped_table_transform, m_table);
+
+	glm::mat4 second_flipped_table_transform(1.0f);
+	second_flipped_table_transform = glm::translate(second_flipped_table_transform, glm::vec3(9.5f, 1.25f, -16.f));
+	second_flipped_table_transform = glm::rotate(second_flipped_table_transform, glm::pi<float>(), glm::vec3(1.f, 0, 0));
+	second_flipped_table_transform = glm::rotate(second_flipped_table_transform, glm::pi<float>() / 6, glm::vec3(0, 1.f, 0));
+	second_flipped_table_transform = glm::scale(second_flipped_table_transform, glm::vec3(.03f,0.01f,0.04f));
+	engine::renderer::submit(mesh_shader, second_flipped_table_transform, m_table);
 
 	m_arcane_blast.on_render(mesh_shader);
 
 	m_material->submit(mesh_shader);
 	//engine::renderer::submit(mesh_shader, m_spell);
 	//engine::renderer::submit(mesh_shader, m_tetrahedron);
-	//for (auto j = 0; j < 6; j++)
-	//{
-	//	for (auto i = 0; i < 6; i++)
-	//	{
-	//		glm::mat4 potion_transform(1.0f);
-	//		potion_transform = glm::translate(potion_transform, glm::vec3(i + 5.f, 1.f, j -2.f));
-	//		potion_transform = glm::scale(potion_transform, glm::vec3(.1f));
-	//		potion_transform = glm::rotate(potion_transform, i * 1.f * j, glm::vec3(1.f, 1.f, 1.f));
-	//		engine::renderer::submit(mesh_shader, potion_transform, m_potion);
-	//	}
-	//}
+	
 	/*glm::mat4 potion_transform(1.0f);
 	potion_transform = glm::translate(potion_transform, glm::vec3(5.f, .5f, -2.f));
 	potion_transform = glm::scale(potion_transform, glm::vec3(.1f));
@@ -649,10 +805,10 @@ void example_layer::on_render()
 			engine::renderer::submit(mesh_shader, table_transform, m_table);
 		}
 	}*/
-	/*std::vector<glm::vec3> barrelStack{
-		glm::vec3(0.f, 0.9f, -5.f),
-		glm::vec3(-1.f, 0.9f, -5.f),
-		glm::vec3(-0.5f, 1.5f, -5.f),
+	std::vector<glm::vec3> barrelStack{
+		glm::vec3(0.f, 0.9f, -18.8f),
+		glm::vec3(-1.f, 0.9f, -18.8f),
+		glm::vec3(-0.5f, 1.5f, -18.8f),
 	};
 
 	for (auto i = 0; i < barrelStack.size(); i++)
@@ -665,20 +821,30 @@ void example_layer::on_render()
 	}
 
 	glm::mat4 z_barrel_transform(1.0f);
-	z_barrel_transform = glm::translate(z_barrel_transform, glm::vec3(1.5f, 0.9f, -4.5f));
+	z_barrel_transform = glm::translate(z_barrel_transform, glm::vec3(1.5f, 0.9f, -18.5f));
 	z_barrel_transform = glm::rotate(z_barrel_transform, glm::half_pi<float>(), glm::vec3(0.f, 0.f, 1.f));
 	z_barrel_transform = glm::scale(z_barrel_transform, glm::vec3(.01f));
 	engine::renderer::submit(mesh_shader, z_barrel_transform, m_barrel);
 
 	glm::mat4 y_barrel_transform(1.0f);
-	y_barrel_transform = glm::translate(y_barrel_transform, glm::vec3(2.f, 0.5f, -4.5f));
+	y_barrel_transform = glm::translate(y_barrel_transform, glm::vec3(2.f, 0.5f, -18.5f));
 	y_barrel_transform = glm::scale(y_barrel_transform, glm::vec3(.01f));
 	engine::renderer::submit(mesh_shader, y_barrel_transform, m_barrel);
 
 	glm::mat4 yy_barrel_transform(1.0f);
-	yy_barrel_transform = glm::translate(yy_barrel_transform, glm::vec3(2.f, 1.5f, -4.5f));
+	yy_barrel_transform = glm::translate(yy_barrel_transform, glm::vec3(2.f, 1.5f, -18.5f));
 	yy_barrel_transform = glm::scale(yy_barrel_transform, glm::vec3(.01f));
-	engine::renderer::submit(mesh_shader, yy_barrel_transform, m_barrel);*/
+	engine::renderer::submit(mesh_shader, yy_barrel_transform, m_barrel);
+
+	if (m_lightningPickup)
+	{
+		glm::mat4 bolt_transform(1.0f);
+		bolt_transform = glm::translate(bolt_transform, m_lightningPickup->position());
+		bolt_transform = glm::rotate(bolt_transform, boltRotation, glm::vec3(0,1.f,0));
+		bolt_transform = glm::scale(bolt_transform, m_lightningPickup->scale());
+		engine::renderer::submit(mesh_shader, bolt_transform, m_lightningPickup);
+		boltRotation += glm::pi<float>() / 180;
+	}
 
 	glm::mat4 sword_transform(1.0f);
 	sword_transform = glm::translate(sword_transform, m_player.equipment_position());
@@ -766,11 +932,39 @@ void example_layer::on_render()
 	torchLight_five_transform = glm::scale(torchLight_five_transform, glm::vec3(1.4f, 1.4f, 1.4f));
 	engine::renderer::submit(mesh_shader, torchLight_five_transform, m_torchLight);
 
+	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
+		set_uniform("gNumPointLights", (int)num_point_lights);
+	m_pointLight_three.submit(mesh_shader, 0);
+
+	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
+		set_uniform("gNumSpotLights", (int)num_spot_lights);
+	m_intro_spotLight.submit(mesh_shader, 0);
+
 	m_mannequin_material->submit(mesh_shader);
 	engine::renderer::submit(mesh_shader, m_player.object());
 
 	m_material->submit(mesh_shader);
 	engine::renderer::submit(mesh_shader, m_ball);
+
+	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
+		set_uniform("lighting_on", false);
+
+	m_lightsource_material->submit(mesh_shader);
+	engine::renderer::submit(mesh_shader, m_ball->meshes().at(0),
+		glm::translate(glm::mat4(1.f), m_pointLight_three.Position));
+
+	m_lightsource_material->submit(mesh_shader);
+	engine::renderer::submit(mesh_shader, m_ball->meshes().at(0),
+		glm::translate(glm::mat4(1.f), m_intro_spotLight.Position));
+
+	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
+		set_uniform("lighting_on", true);
+
+	engine::renderer::submit(mesh_shader, m_ball->meshes().at(0),
+		glm::translate(glm::mat4(1.f), m_pointLight_three.Position));
+
+	engine::renderer::submit(mesh_shader, m_ball->meshes().at(0),
+		glm::translate(glm::mat4(1.f), m_intro_spotLight.Position));
 
 	for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
 		m_lightning_bolts.at(i)->on_render(mesh_shader);
@@ -782,9 +976,14 @@ void example_layer::on_render()
 	const auto text_shader = engine::renderer::shaders_library()->get("text_2D");
 	m_text_manager->render_text(text_shader, "Camera Position: " + glm::to_string(m_3d_camera.position()), 10.f, (float)engine::application::window().height() - 25.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
 	m_text_manager->render_text(text_shader, "Camera front-vector: " + glm::to_string(m_3d_camera.front_vector()), 10.f, (float)engine::application::window().height() - 50.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
+	m_text_manager->render_text(text_shader, "Health: " + std::to_string(m_player.getHealth()) , 10.f, (float)engine::application::window().height() - 75.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
 
 	engine::renderer::begin_scene(m_2d_camera, mesh_shader);
 	m_cross_fade->on_render(mesh_shader);
+	engine::renderer::end_scene();
+
+	engine::renderer::begin_scene(m_3d_camera, mesh_shader);
+	m_billboard->on_render(m_3d_camera, mesh_shader);
 	engine::renderer::end_scene();
 
 } 
@@ -807,34 +1006,51 @@ void example_layer::on_event(engine::event& event)
 		{
 			m_display_options = true;
 			m_3d_camera.position(glm::vec3(21.f, -20.2f, 13.0));
+			m_intro_spotLight.Position += glm::vec3(21.f,0,0);
 		}
 		if (e.key_code() == engine::key_codes::KEY_LEFT && !m_gameStart && m_display_options)
 		{
 			m_display_options = false;
 			m_3d_camera.position(glm::vec3(0, -20.f, 13.0));
+			m_intro_spotLight.Position += glm::vec3(-21.f, 0, 0);
 		}
 		if (e.key_code() == engine::key_codes::KEY_J)
 		{
 			freeCam = !freeCam;
 		}
-		if (e.key_code() == engine::key_codes::KEY_N && !m_active_spell)
+		if (e.key_code() == engine::key_codes::KEY_N && blastAvailable)
 		{
 			m_active_spell = true;
 			m_arcane_blast.throw_spell(m_3d_camera, 100.0f);
 			//m_audio_manager->play("throw_spell");
+			blastAvailable = false;
 		}
 		if (e.key_code() == engine::key_codes::KEY_BACKSPACE)
 		{
 			m_game_objects.erase(m_game_objects.begin());
 		}
-		if (e.key_code() == engine::key_codes::KEY_3)
+		if (e.key_code() == engine::key_codes::KEY_3 && healingAvailable)
 		{
 			m_cross_fade->activate();
+			m_player.heal();
+			healingAvailable = false;
+			spawnPotion = false;
 		}
 		if (e.key_code() == engine::key_codes::KEY_4)
 		{
 			for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
 				m_lightning_bolts.at(i)->activate(m_player.position(), m_player.getForward());
+			}
+		}
+		if (e.key_code() == engine::key_codes::KEY_8)
+		{
+			if (drawBoundingBoxes == true)
+			{
+				drawBoundingBoxes = false;
+			}
+			else
+			{
+				drawBoundingBoxes = true;
 			}
 		}
     } 
