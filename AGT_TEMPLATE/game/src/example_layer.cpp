@@ -83,7 +83,7 @@ example_layer::example_layer()
 	engine::game_object_properties mannequin_props;
 	mannequin_props.animated_mesh = m_skinned_mesh;
 	mannequin_props.scale = glm::vec3(1.f / glm::max(m_skinned_mesh->size().x,glm::max(m_skinned_mesh->size().y, m_skinned_mesh->size().z)));
-	mannequin_props.position = glm::vec3(0.f, 0.9f, 10.f);
+	mannequin_props.position = glm::vec3(0.f, 2.5f, 10.f);
 	mannequin_props.rotation_amount = engine::PI;
 	mannequin_props.rotation_axis = glm::vec3(0.f, 1.f, 0.f);
 	mannequin_props.type = 0;
@@ -248,7 +248,9 @@ example_layer::example_layer()
 	float mimic_scale = 1.f / glm::max(mimic_model->size().x, glm::max(mimic_model->size().y,
 		mimic_model->size().z));
 	//mimic_props.position = { 7.f,0.5f, -5.f };
-	mimic_props.position = { 7.f,0.0f, 1.f };
+	mimic_props.position = { 7.f,1.0f, 1.f };
+	mimic_props.rotation_amount = glm::pi<float>();
+	mimic_props.rotation_axis = glm::vec3(0,1.f,0);
 	mimic_props.scale = glm::vec3(mimic_scale) ;
 	mimic_props.bounding_shape = mimic_model->size() / 2.f;
 	mimic_props.type = 0;
@@ -256,19 +258,46 @@ example_layer::example_layer()
 	m_mimic->set_offset(mimic_model->offset());
 	m_mimic_box.set_box(mimic_props.bounding_shape.x * 2.f * mimic_scale,
 		mimic_props.bounding_shape.y * 2.f * mimic_scale, mimic_props.bounding_shape.z * 2.f *
-		mimic_scale, mimic_props.position - glm::vec3(0.f, m_mimic->offset().y, 0.f) * m_mimic->scale());
+		mimic_scale, mimic_props.position - glm::vec3(0.f, m_mimic->offset().y - 3.f, 0.f) * m_mimic->scale());
 	m_mimic = engine::game_object::create(mimic_props);
+
+	m_mimicNPC.initialise(m_mimic, mimic_props.position, glm::vec3(1.f, 0.f, 0.f));
+
+	// Load the lemur model. Create a lemur object. Set its properties
+	// Mesh downloaded from https://opengameart.org/content/lemur
+	engine::ref<engine::model> lemur_model =
+		engine::model::create("assets/models/static/lemur.obj");
+	engine::game_object_properties lemur_props;
+	lemur_props.meshes = lemur_model->meshes();
+	lemur_props.textures = lemur_model->textures();
+	float lemur_scale = 1.f / glm::max(lemur_model->size().x, glm::max(lemur_model->size().y,
+		lemur_model->size().z));
+	lemur_props.position = { 15.f,0.5f,10.f };
+	lemur_props.scale = glm::vec3(lemur_scale);
+	lemur_props.bounding_shape = lemur_model->size() / 2.f;
+	lemur_props.type = 0;
+	m_lemur = engine::game_object::create(lemur_props);
+	m_lemur->set_offset(lemur_model->offset());
+	m_lemur_box.set_box(lemur_props.bounding_shape.x * 2.f * lemur_scale,
+		lemur_props.bounding_shape.y * 2.f * lemur_scale, lemur_props.bounding_shape.z * 2.f *
+		lemur_scale, lemur_props.position - glm::vec3(0.f, m_lemur->offset().y, 0.f) * m_lemur->scale());
+	m_lemur = engine::game_object::create(lemur_props);
+
+	m_lemurNPC.initialise(m_lemur, lemur_props.position, glm::vec3(1.f, 0.f, 0.f));
+
 
 	// Mesh downloaded from https://www.turbosquid.com/3d-models/3d-model-wooden-barrels-1488970
 	engine::ref <engine::model> barrel_model = engine::model::create("assets/models/static/barrel_obj.obj");
 	engine::game_object_properties barrel_props;
 	barrel_props.meshes = barrel_model->meshes();
 	barrel_props.textures = barrel_model->textures();
-	float barrel_scale = 1.f / glm::max(barrel_model->size().x, glm::max(barrel_model->size().y, barrel_model->size().z));
-	barrel_props.position = { 0.f,0.9f, 0.f };
+	float barrel_scale = 1.f / glm::max(barrel_model->size().x , glm::max(barrel_model->size().y, barrel_model->size().z));
+	barrel_props.position = { 0.f,3.0f, 0.f };
 	barrel_props.scale = glm::vec3(barrel_scale);
-	barrel_props.bounding_shape = barrel_model->size() / 2.f;
+	barrel_props.bounding_shape = barrel_model->size()/2.f * (glm::vec3(2.f,1.f,2.f));
 	barrel_props.type = 0;
+	barrel_props.rotation_amount = glm::half_pi<float>();
+	barrel_props.rotation_axis = glm::vec3(1.f, 0, 0);
 	m_barrel = engine::game_object::create(barrel_props);
 	m_barrel->set_offset(barrel_model->offset());
 	m_barrel_box.set_box(barrel_props.bounding_shape.x * 2.f * barrel_scale,
@@ -298,6 +327,20 @@ example_layer::example_layer()
 	//tree_props.scale = glm::vec3(tree_scale);
 	//m_tree = engine::game_object::create(tree_props);
 
+	engine::ref<engine::sphere> torchLight_shape = engine::sphere::create(10, 20, 0.1f);
+	engine::game_object_properties torchLight_props;
+	torchLight_props.position = { 0.f, 5.f, -5.f };
+	torchLight_props.meshes = { torchLight_shape->mesh() };
+	torchLight_props.type = 1;
+	torchLight_props.restitution = 0.85f;
+	torchLight_props.bounding_shape = glm::vec3(0.1f);
+	torchLight_props.mass = 0.45f;
+	torchLight_props.scale = glm::vec3(0.1f);
+	torchLight_props.rolling_friction = 0.1f;
+	m_spell = engine::game_object::create(torchLight_props);
+
+	m_torchLight = engine::game_object::create(torchLight_props);
+
 	//engine::ref<engine::sphere> spell_shape = engine::sphere::create(10, 20, 0.1f);
 	engine::ref <engine::model> spell_shape = engine::model::create("assets/models/static/newSoccerBall.3ds");
 	engine::game_object_properties spell_props;
@@ -311,10 +354,10 @@ example_layer::example_layer()
 	spell_props.rolling_friction = 0.1f;
 	m_spell = engine::game_object::create(spell_props);
 
-	float radius = 0.01f;
+	float radius = 0.1f;
 	engine::ref<engine::sphere>sphere_shape = engine::sphere::create(10, 20, radius);
 	engine::game_object_properties sphere_props;
-	sphere_props.position = { 0.f, 3.f, 1.f };
+	sphere_props.position = { 0.f, 5.f, -5.f };
 	sphere_props.meshes = { sphere_shape->mesh() };
 	sphere_props.type = 1;
 	sphere_props.bounding_shape = glm::vec3(radius);
@@ -355,6 +398,9 @@ example_layer::example_layer()
 		engine::torch::create();
 	engine::game_object_properties torch_props;
 	torch_props.position = { 0.f, 0.f, 0.f };
+	engine::ref<engine::texture_2d> torch_texture =
+		engine::texture_2d::create("assets/textures/stone.jpg", true);
+	torch_props.textures = { torch_texture };
 	torch_props.meshes = { torch_shape->mesh() };
 	m_torch = engine::game_object::create(torch_props);
 
@@ -386,7 +432,8 @@ example_layer::example_layer()
 	m_game_objects.push_back(m_spell);
 	m_game_objects.push_back(m_mannequin);
 	//m_game_objects.push_back(m_cow);
-	m_game_objects.push_back(m_mimic);
+	//m_game_objects.push_back(m_mimic);
+	//m_game_objects.push_back(m_lemur);
 	//m_game_objects.push_back(m_tree);
 	//m_game_objects.push_back(m_pickup);
 	m_physics_manager = engine::bullet_manager::create(m_game_objects);
@@ -395,8 +442,13 @@ example_layer::example_layer()
 
 	m_skinned_mesh->switch_animation(1);
 
+	m_cross_fade = cross_fade::create("assets/textures/green.bmp", 2.0f, 1.6f, 0.9f);
+
 	m_arcane_blast.initialise(m_spell);
 
+	for (uint32_t i = 0; i < 3; i++) {
+		m_lightning_bolts.push_back(lightning_bolt::create(glm::vec3(-4.f, 1.f, -4.85f), glm::vec3(0.f, 0.f, 1.f), 2.0f));
+	}
 
 }
 
@@ -422,6 +474,10 @@ void example_layer::on_update(const engine::timestep& time_step)
 
 	m_enemy.on_update(time_step, m_player.object()->position());
 
+	m_mimicNPC.on_update(time_step, m_player.object()->position());
+
+	m_lemurNPC.on_update(time_step, m_player.object()->position());
+
 		
 	/*m_player_box.on_update(m_player.object()->position() - glm::vec3(0.f,
 		m_player.object()->offset().y, 0.f) * m_player.object()->scale(),
@@ -433,10 +489,15 @@ void example_layer::on_update(const engine::timestep& time_step)
 	m_mimic_box.on_update(m_mimic->position() - glm::vec3(0.f, m_mimic->offset().y, 0.f)
 		* m_mimic->scale(), m_mimic->rotation_amount(), m_mimic->rotation_axis());
 
+	m_lemur_box.on_update(m_lemur->position() - glm::vec3(0.f, m_lemur->offset().y, 0.f)
+		* m_lemur->scale(), m_lemur->rotation_amount(), m_lemur->rotation_axis());
+
 	m_barrel_box.on_update(m_barrel->position() - glm::vec3(0.f, m_barrel->offset().y, 0.f)
 		* m_barrel->scale(), m_barrel->rotation_amount(), m_barrel->rotation_axis());
 
 	m_active_spell_timer += time_step;
+
+	m_lemur->set_velocity(glm::vec3(0,-1.f,0));
 
 	if (m_active_spell_timer > 2.f)
 	{
@@ -450,6 +511,8 @@ void example_layer::on_update(const engine::timestep& time_step)
 
 	m_audio_manager->update_with_camera(m_3d_camera);
 
+	m_cross_fade->on_update(time_step);
+
 	check_bounce();
 
 	if (m_spell->is_colliding() && m_spell->collision_objects().size() > 1)
@@ -461,6 +524,15 @@ void example_layer::on_update(const engine::timestep& time_step)
 	{
 		m_enemy.object()->set_position(enemy_pos);
 		std::cout << "Cow is colliding" << '\n';
+	}
+	if (m_lemur_box.collision(m_player.getBox()))
+	{
+		m_player.increaseSpeed();
+		std::cout << "collision with lemur";
+	}
+
+	for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
+		m_lightning_bolts.at(i)->on_update(time_step);
 	}
 } 
 
@@ -509,6 +581,8 @@ void example_layer::on_render()
 
 	m_mimic_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
 
+	m_lemur_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
+
 
 	engine::renderer::submit(mesh_shader, m_barrel);
 
@@ -535,6 +609,12 @@ void example_layer::on_render()
 	mimic_transform = glm::rotate(mimic_transform, m_mimic->rotation_amount(), m_mimic->rotation_axis());
 	mimic_transform = glm::scale(mimic_transform, m_mimic->scale());
 	engine::renderer::submit(mesh_shader, mimic_transform, m_mimic);
+
+	glm::mat4 lemur_transform(1.0f);
+	lemur_transform = glm::translate(lemur_transform, m_lemur->position());
+	lemur_transform = glm::rotate(lemur_transform, m_lemur->rotation_amount(), m_lemur->rotation_axis());
+	lemur_transform = glm::scale(lemur_transform, m_lemur->scale());
+	engine::renderer::submit(mesh_shader, lemur_transform, m_lemur);
 
 	m_arcane_blast.on_render(mesh_shader);
 
@@ -642,13 +722,59 @@ void example_layer::on_render()
 		}
 	}*/
 
+	glm::mat4 torch_two_transform(1.0f);
+	torch_two_transform = glm::translate(torch_two_transform, glm::vec3( -1.7f, 2.f,-10.f));
+	torch_two_transform = glm::scale(torch_two_transform, glm::vec3(0.15f));
+	torch_two_transform = glm::rotate(torch_two_transform, glm::half_pi<float>(), glm::vec3(0,-1.f,0));
+	engine::renderer::submit(mesh_shader, torch_two_transform, m_torch);
+
+	glm::mat4 torch_three_transform(1.0f);
+	torch_three_transform = glm::translate(torch_three_transform, glm::vec3(4.7f, 2.f, -15.f));
+	torch_three_transform = glm::scale(torch_three_transform, glm::vec3(0.15f));
+	torch_three_transform = glm::rotate(torch_three_transform, glm::half_pi<float>(), glm::vec3(0, 1.f, 0));
+	engine::renderer::submit(mesh_shader, torch_three_transform, m_torch);
+
+	glm::mat4 torch_four_transform(1.0f);
+	torch_four_transform = glm::translate(torch_four_transform, glm::vec3(11.25f, 2.f, -5.85f));
+	torch_four_transform = glm::scale(torch_four_transform, glm::vec3(0.15f));
+	torch_four_transform = glm::rotate(torch_four_transform, glm::half_pi<float>() - glm::pi<float>()/9, glm::vec3(0, 1.f, 0));
+	engine::renderer::submit(mesh_shader, torch_four_transform, m_torch);
+
+	glm::mat4 torch_five_transform(1.0f);
+	torch_five_transform = glm::translate(torch_five_transform, glm::vec3(9.f, 2.f, -18.7f));
+	torch_five_transform = glm::scale(torch_five_transform, glm::vec3(0.15f));
+	torch_five_transform = glm::rotate(torch_five_transform, glm::pi<float>(), glm::vec3(0, 1.f, 0));
+	engine::renderer::submit(mesh_shader, torch_five_transform, m_torch);
+
+	glm::mat4 torchLight_two_transform(1.0f);
+	torchLight_two_transform = glm::translate(torchLight_two_transform, glm::vec3(-1.25f, 2.9f, -10.f));
+	torchLight_two_transform = glm::scale(torchLight_two_transform, glm::vec3(1.4f, 1.4f, 1.4f));
+	engine::renderer::submit(mesh_shader, torchLight_two_transform, m_torchLight);
+
+	glm::mat4 torchLight_three_transform(1.0f);
+	torchLight_three_transform = glm::translate(torchLight_three_transform, glm::vec3(4.25f, 2.9f, -15.f));
+	torchLight_three_transform = glm::scale(torchLight_three_transform, glm::vec3(1.4f, 1.4f, 1.4f));
+	engine::renderer::submit(mesh_shader, torchLight_three_transform, m_torchLight);
+
+	glm::mat4 torchLight_four_transform(1.0f);
+	torchLight_four_transform = glm::translate(torchLight_four_transform, glm::vec3(9.f, 3.0f, -18.25f));
+	torchLight_four_transform = glm::scale(torchLight_four_transform, glm::vec3(1.4f, 1.4f, 1.4f));
+	engine::renderer::submit(mesh_shader, torchLight_four_transform, m_torchLight);
+
+	glm::mat4 torchLight_five_transform(1.0f);
+	torchLight_five_transform = glm::translate(torchLight_five_transform, glm::vec3(10.82f, 3.0f, -5.97f));
+	torchLight_five_transform = glm::scale(torchLight_five_transform, glm::vec3(1.4f, 1.4f, 1.4f));
+	engine::renderer::submit(mesh_shader, torchLight_five_transform, m_torchLight);
+
 	m_mannequin_material->submit(mesh_shader);
 	engine::renderer::submit(mesh_shader, m_player.object());
 
 	m_material->submit(mesh_shader);
 	engine::renderer::submit(mesh_shader, m_ball);
 
-
+	for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
+		m_lightning_bolts.at(i)->on_render(mesh_shader);
+	}
 
     engine::renderer::end_scene();
 
@@ -656,6 +782,11 @@ void example_layer::on_render()
 	const auto text_shader = engine::renderer::shaders_library()->get("text_2D");
 	m_text_manager->render_text(text_shader, "Camera Position: " + glm::to_string(m_3d_camera.position()), 10.f, (float)engine::application::window().height() - 25.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
 	m_text_manager->render_text(text_shader, "Camera front-vector: " + glm::to_string(m_3d_camera.front_vector()), 10.f, (float)engine::application::window().height() - 50.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
+
+	engine::renderer::begin_scene(m_2d_camera, mesh_shader);
+	m_cross_fade->on_render(mesh_shader);
+	engine::renderer::end_scene();
+
 } 
 
 void example_layer::on_event(engine::event& event) 
@@ -695,6 +826,16 @@ void example_layer::on_event(engine::event& event)
 		if (e.key_code() == engine::key_codes::KEY_BACKSPACE)
 		{
 			m_game_objects.erase(m_game_objects.begin());
+		}
+		if (e.key_code() == engine::key_codes::KEY_3)
+		{
+			m_cross_fade->activate();
+		}
+		if (e.key_code() == engine::key_codes::KEY_4)
+		{
+			for (uint32_t i = 0; i < m_lightning_bolts.size(); i++) {
+				m_lightning_bolts.at(i)->activate(m_player.position(), m_player.getForward());
+			}
 		}
     } 
 }

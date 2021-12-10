@@ -7,6 +7,11 @@
 #include "arcane_blast.h"
 #include "engine/entities/bounding_box_bullet.h"
 #include "enemy.h"
+#include "mimic.h"
+#include "lemur.h"
+#include "cross_fade.h"
+#include "lightning_bolt.h"
+
 
 
 class example_layer : public engine::layer
@@ -29,6 +34,7 @@ private:
 	engine::ref<engine::game_object>	m_terrain{};
 	engine::ref<engine::game_object>	m_cow{};
 	engine::ref<engine::game_object>	m_mimic{};
+	engine::ref<engine::game_object>	m_lemur{};
 	engine::ref<engine::game_object>	m_tree{};
 	engine::ref<engine::game_object>	m_spell{};
 	engine::ref<engine::game_object>	m_mannequin{};
@@ -37,6 +43,7 @@ private:
 	engine::ref<engine::game_object>	m_potion{};
 	engine::ref<engine::game_object>	m_table{};
 	engine::ref<engine::game_object>	m_torch{};
+	engine::ref<engine::game_object>	m_torchLight{};
 	engine::ref<engine::game_object>	m_intro{};
 	engine::ref<engine::game_object>	m_options{};
 	engine::ref<engine::game_object>	m_barrel{};
@@ -59,17 +66,20 @@ private:
 	player								m_player{};
 
 	enemy								m_enemy{};
+	mimic								m_mimicNPC{};
+	lemur								m_lemurNPC{};
+
 
 	arcane_blast m_arcane_blast;
 
 	engine::bounding_box				m_barrel_box;
 	engine::bounding_box				m_cow_box;
+	engine::bounding_box				m_lemur_box;
 	engine::bounding_box				m_mimic_box;
 
 
 	engine::ref<engine::material>		m_material{};
 	engine::ref<engine::material>		m_mannequin_material{};
-	engine::ref<engine::material>		m_monk_material{};
 
 
 	engine::DirectionalLight            m_directionalLight;
@@ -94,5 +104,9 @@ private:
 	float								wallLength, wallDepth, wallWidth;
 
 	glm::vec3							enemy_pos;
+
+	engine::ref<cross_fade>							m_cross_fade{};
+	std::vector<engine::ref<lightning_bolt>>		m_lightning_bolts{};
+
 
 };

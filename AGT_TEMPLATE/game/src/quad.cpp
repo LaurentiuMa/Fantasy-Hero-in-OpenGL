@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "quadrilateral.h"
+#include "quad.h"
 
-quadrilateral::quadrilateral(glm::vec2 half_extents) : m_half_extents(half_extents)
+quad::quad(glm::vec2 half_extents) : m_half_extents(half_extents)
 {
 
-	std::vector<engine::mesh::vertex> quadrilateral_vertices
+	std::vector<engine::mesh::vertex> quad_vertices
 	{
 		//                   position												normal				 tex coord       
 		{ {-1.f * m_half_extents.x, -1.f * m_half_extents.y,  0.0f },		{ 0.0f, 0.0f,  -1.0f },		{ 0.f, 0.f } },
@@ -19,12 +19,12 @@ quadrilateral::quadrilateral(glm::vec2 half_extents) : m_half_extents(half_exten
 		 0,  2,  3,
 	};
 
-	m_mesh = engine::mesh::create(quadrilateral_vertices, quad_indices);
+	m_mesh = engine::mesh::create(quad_vertices, quad_indices);
 }
 
-quadrilateral::~quadrilateral() {}
+quad::~quad() {}
 
-engine::ref<quadrilateral> quadrilateral::create(glm::vec2 half_extents)
+engine::ref<quad> quad::create(glm::vec2 half_extents)
 {
-	return std::make_shared<quadrilateral>(half_extents);
+	return std::make_shared<quad>(half_extents);
 }

@@ -24,8 +24,7 @@ public:
 	glm::vec3 equipment_position();
 
 	void wobble();
-	void reset_wobble();
-
+	void increaseSpeed() {m_speed_boost += 0.5f;};
 	glm::vec3 position() { return m_object->position(); };
 
 	void set_box(float width, float height, float depth, glm::vec3 position) {
@@ -33,9 +32,12 @@ public:
 	}
 	engine::bounding_box& getBox() { return m_player_box; };
 
+	glm::vec3 getForward() { return m_object->forward(); };
+
 private:
 
 	float m_speed{ 0.f };
+	float m_speed_boost{ 1.f };
 	float m_timer;
 	float cam_wobble;
 	float wobble_modifier;

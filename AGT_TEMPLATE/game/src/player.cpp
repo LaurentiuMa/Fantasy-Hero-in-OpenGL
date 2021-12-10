@@ -29,10 +29,10 @@ void player::on_update(const engine::timestep& time_step)
 
 	if (engine::input::key_pressed(engine::key_codes::KEY_1)) { // left
 
-		turn(1.0f * time_step);
+		turn(1.0f * time_step + m_speed_boost/1000);
 	}
 	else if (engine::input::key_pressed(engine::key_codes::KEY_2)) { // right
-		turn(-1.0f * time_step);
+		turn(-1.0f * time_step - m_speed_boost/1000);
 	}
 	else { turn(0.0f); }
 
@@ -40,13 +40,13 @@ void player::on_update(const engine::timestep& time_step)
 	{
 		wobble();
 		float down_vel = m_object->velocity().y;
-		m_object->set_velocity(glm::vec3(m_object->forward().x * m_speed, down_vel, m_object -> forward().z * m_speed));
+		m_object->set_velocity(glm::vec3(m_object->forward().x * (m_speed + m_speed_boost), down_vel, m_object -> forward().z * (m_speed + m_speed_boost)));
 	}
 	else if (engine::input::key_pressed(engine::key_codes::KEY_P))
 	{
 		wobble();
 		float down_vel = m_object->velocity().y;
-		m_object->set_velocity(glm::vec3(-m_object->forward().x * m_speed, down_vel, -m_object -> forward().z * m_speed));
+		m_object->set_velocity(glm::vec3(-m_object->forward().x * (m_speed + m_speed_boost), down_vel, -m_object -> forward().z * (m_speed + m_speed_boost)));
 	}
 	else
 	{
