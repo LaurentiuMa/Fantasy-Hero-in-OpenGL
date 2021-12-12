@@ -10,7 +10,7 @@ namespace engine
 	{
 	public:
 		/// \brief Constructor
-		terrain(float length, float depth, float width);
+		terrain(float length, float depth, float width,float repeat);
 		/// \brief Destructor
 		~terrain();
 
@@ -19,7 +19,7 @@ namespace engine
 		float length() const { return m_length; }
 		float depth() const { return m_depth; }
 
-		static ref<terrain> create(float length, float depth, float width);
+		static ref<terrain> create(float length, float depth, float width, float repeat);
 	private:
 		/// \brief Fields
 		// terrain's width
@@ -28,5 +28,7 @@ namespace engine
 		float m_depth;
 		// terrain's length
 		float m_length;
+
+		float m_repeat;
 	};
 }

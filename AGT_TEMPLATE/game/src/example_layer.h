@@ -12,7 +12,7 @@
 #include "cross_fade.h"
 #include "lightning_bolt.h"
 #include "billboard.h"
-
+#include "hud.h"
 
 
 class example_layer : public engine::layer
@@ -27,12 +27,19 @@ public:
 
 	void resetPropPosition(engine::game_object_properties props);
 
+	void checkHP();
+
+	void popHeart();
+
+	void enemyAttack();
+
 private:
 	void check_bounce();
 
 
 	engine::ref<engine::skybox>			m_skybox{};
 	engine::ref<engine::game_object>	m_terrain{};
+	engine::ref<engine::game_object>	m_ground{};
 	engine::ref<engine::game_object>	m_cow{};
 	engine::ref<engine::game_object>	m_mimic{};
 	engine::ref<engine::game_object>	m_lemur{};
@@ -102,21 +109,30 @@ private:
 
 	bool								m_gameStart;
 	bool								m_display_options;
+	bool								m_display_gameOver;
 	bool								freeCam;
-	bool								m_active_spell;
-
-	float								m_active_spell_timer;
 
 	float								wallLength, wallDepth, wallWidth;
 
 	glm::vec3							enemy_pos;
 	glm::vec3							grenadeSpawn;
 
-	engine::ref<cross_fade>							m_cross_fade_healing{};
-	engine::ref<cross_fade>							m_cross_fade_damage{};
+	engine::ref<cross_fade>				m_cross_fade_healing{};
+	engine::ref<cross_fade>				m_cross_fade_damage{};
+
+	engine::ref<hud>					m_hud_hundred{};
+	engine::ref<hud>					m_hud_eighty{};
+	engine::ref<hud>					m_hud_sixty{};
+	engine::ref<hud>					m_hud_forty{};
+	engine::ref<hud>					m_hud_twenty{};
+	engine::ref<hud>					m_hud_zero{};
+
+	std::vector<engine::ref<hud>>		m_heart_vector;
+	int									heart_pops;
+
 
 	std::vector<engine::ref<lightning_bolt>>		m_lightning_bolts{};
-	engine::ref<billboard>							m_billboard{};
+	engine::ref<billboard>				m_billboard{};
 
 
 	engine::PointLight					m_pointLight_three;
@@ -141,4 +157,16 @@ private:
 	float								boltRotation;
 
 	float								lightningRadius{4.f};
+
+	float								enemy_attackCD = 2.f;
+	float								enemy_attackTime = 0;
+
+	float								lightningCD = 3.f;
+	float								lightningTime = 0;
+
+	float								tStep;
+
+	bool								m_gameOver;
+	float								m_gameOverTime;
+	float								m_gameOverCD = .5;
 };

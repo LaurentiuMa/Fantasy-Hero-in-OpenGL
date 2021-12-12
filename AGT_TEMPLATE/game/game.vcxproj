@@ -136,6 +136,7 @@
     <ClInclude Include="src\enemy.h" />
     <ClInclude Include="src\example_layer.h" />
     <ClInclude Include="src\arcane_blast.h" />
+    <ClInclude Include="src\hud.h" />
     <ClInclude Include="src\lemur.h" />
     <ClInclude Include="src\lightning_bolt.h" />
     <ClInclude Include="src\mimic.h" />
@@ -149,6 +150,7 @@
     <ClCompile Include="src\example_layer.cpp" />
     <ClCompile Include="src\arcane_blast.cpp" />
     <ClCompile Include="src\game.cpp" />
+    <ClCompile Include="src\hud.cpp" />
     <ClCompile Include="src\lemur.cpp" />
     <ClCompile Include="src\lightning_bolt.cpp" />
     <ClCompile Include="src\mimic.cpp" />

@@ -1,14 +1,17 @@
 #pragma once
 #include <engine.h>
+
+enum class enemy_state
+{
+	patrolling,
+	on_guard,
+	chasing,
+	resting,
+	attacking
+};
+
 class enemy
 {
-	enum class state
-	{
-		patrolling,
-		on_guard,
-		chasing,
-		resting
-	};
 public:
 	enemy();
 	~enemy();
@@ -26,6 +29,8 @@ public:
 		player_position);
 	bool rest(const engine::timestep& time_step);
 
+	enemy_state getState() { return m_state; };
+
 	void takeDamage(int dmg) { health -= dmg; };
 
 	int getHealth() { return health; };
@@ -40,11 +45,12 @@ private:
 	float m_switch_direction_timer = m_default_time;
 	// threshold distances
 	float m_detection_radius{ 6.f };
-	float m_trigger_radius{ 3.f };
+	float m_trigger_radius{ 4.f };
+	float m_attacking_radius{ 3.f };
 	// game object bound to the enemy
 	engine::ref< engine::game_object> m_object;
 	//current state of the enemy's state machine
-	state m_state = state::patrolling;
+	enemy_state m_state = enemy_state::patrolling;
 
 	std::vector<glm::vec3> patrolForwardVectors{
 		glm::vec3(1,0,0),
@@ -64,4 +70,5 @@ private:
 	glm::vec3 velocityBegin;
 
 	int health;
+
 };

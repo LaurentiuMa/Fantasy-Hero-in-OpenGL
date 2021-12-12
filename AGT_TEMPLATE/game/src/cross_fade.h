@@ -1,5 +1,6 @@
 #pragma once
 #include <engine.h>
+#include "quad.h"
 
 class quad;
 

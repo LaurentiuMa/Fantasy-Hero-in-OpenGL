@@ -14,39 +14,52 @@ void enemy::on_update(const engine::timestep& time_step, const glm::vec3& player
 {
 	float distance_to_player = glm::distance(m_object->position(), player_position);
 	// check which state is the enemy in, then execute the matching behaviour
-	if (m_state == state::patrolling)
+	if (m_state == enemy_state::patrolling)
 	{
 		patrol(time_step);
 		// check whether the condition has been met to switch to the on_guard state
 		if (distance_to_player < m_detection_radius)
-			m_state = state::on_guard;
+			m_state = enemy_state::on_guard;
 		velocityBegin = m_object->velocity();
 	}
-	else if (m_state == state::on_guard)
+	else if (m_state == enemy_state::on_guard)
 	{
 		face_player(time_step, player_position);
 		// check whether the condition has been met to switch back to patrolling state
 		if (distance_to_player > m_detection_radius)
-			m_state = state::patrolling;
+			m_state = enemy_state::patrolling;
 		// check whether the condition has been met to switch to the chasing state
 		else if (distance_to_player < m_trigger_radius)
-			m_state = state::chasing;
+			m_state = enemy_state::chasing;
 	}
-	else if(m_state == state::chasing)
+	else if(m_state == enemy_state::chasing)
 	{
+		m_speed = .3f;
 		chase_player(time_step, player_position);
 		// check whether the condition has been met to switch back to patrolling state
 		if (distance_to_player > m_detection_radius)
 		{
-			m_state = state::resting;
+			m_speed = .1f;
+			m_state = enemy_state::resting;
 			restBeginTime = (float)time_step;
+		}
+		else if (distance_to_player < m_attacking_radius)
+		{
+			m_state = enemy_state::attacking;
+		}
+	}
+	else if (m_state == enemy_state::attacking)
+	{
+		if (distance_to_player > m_attacking_radius)
+		{
+			m_state = enemy_state::chasing;
 		}
 	}
 	else
 	{
 		if (rest(time_step))
 		{
-			m_state = state::patrolling;
+			m_state = enemy_state::patrolling;
 			restTime = defaultrestTime;
 		}
 	}

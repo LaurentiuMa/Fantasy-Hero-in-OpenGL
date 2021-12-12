@@ -62,8 +62,6 @@ glm::vec3 lemur::changeForward()
 	float x = rand() % 2 - 1;
 	float z = rand() % 2 - 1;
 
-	std::cout << x << ", " << 0 << ", " << z << '\n';
-
 	return glm::vec3(x, 0, z);
 
 

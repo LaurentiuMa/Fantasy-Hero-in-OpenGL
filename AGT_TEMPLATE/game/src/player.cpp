@@ -10,6 +10,7 @@ player::player()
 	m_speed = 0.0f;
 	cam_wobble = 0.0f;
 	wobble_modifier = 0.01f;
+	buffActive = false;
 }
 player::~player() {};
 
@@ -20,30 +21,41 @@ void player::initialise(engine::ref<engine::game_object> object)
 	m_object->set_position(glm::vec3(0.f, 0.9f, 10.f));	m_object->animated_mesh()->set_default_animation(1);
 	m_object->set_angular_factor_lock(true);
 	health = 100;
+	m_gameStart = true;
+	is_jumping = false;
 }
 
 void player::on_update(const engine::timestep& time_step)
 {
 	m_object->animated_mesh()->on_update(time_step);
 
+	turnTime += time_step;
+
+	jumpTime += time_step;
+
 	//m_object->set_rotation_amount(atan2(m_object->forward().x, m_object->forward().z));
 
-	if (engine::input::key_pressed(engine::key_codes::KEY_1)) { // left
+	if (engine::input::key_pressed(engine::key_codes::KEY_A) && m_gameStart) { // left
 
 		turn(1.0f * time_step + m_speed_boost/1000);
 	}
-	else if (engine::input::key_pressed(engine::key_codes::KEY_2)) { // right
+	else if (engine::input::key_pressed(engine::key_codes::KEY_D) && m_gameStart) { // right
 		turn(-1.0f * time_step - m_speed_boost/1000);
+	}
+	else if (engine::input::key_pressed(engine::key_codes::KEY_G) && m_gameStart && turnTime > turnCD && buffActive)
+	{
+		turn(180.f);
+		turnTime = 0.f;
 	}
 	else { turn(0.0f); }
 
-	if (engine::input::key_pressed(engine::key_codes::KEY_O))
+	if (engine::input::key_pressed(engine::key_codes::KEY_W) && m_gameStart)
 	{
 		wobble();
 		float down_vel = m_object->velocity().y;
 		m_object->set_velocity(glm::vec3(m_object->forward().x * (m_speed + m_speed_boost), down_vel, m_object -> forward().z * (m_speed + m_speed_boost)));
 	}
-	else if (engine::input::key_pressed(engine::key_codes::KEY_P))
+	else if (engine::input::key_pressed(engine::key_codes::KEY_S) && m_gameStart)
 	{
 		wobble();
 		float down_vel = m_object->velocity().y;
@@ -55,20 +67,20 @@ void player::on_update(const engine::timestep& time_step)
 	}
 
 
-	if (engine::input::key_pressed(engine::key_codes::KEY_H)) // right
+	//if (engine::input::key_pressed(engine::key_codes::KEY_H)) // right
 
-		jump();
+	//	jump(time_step);
 
-	if (m_timer > 0.0f)
-	{
-		m_timer -= (float)time_step;
-		if (m_timer < 0.0f)
-		{
-			m_object->animated_mesh()->switch_root_movement(false);
-			m_object->animated_mesh()->switch_animation(m_object->animated_mesh() -> default_animation());
-			m_speed = 1.0f;
-		}
-	}
+	//if (m_timer > 0.0f)
+	//{
+	//	m_timer -= (float)time_step;
+	//	if (m_timer < 0.0f)
+	//	{
+	//		m_object->animated_mesh()->switch_root_movement(false);
+	//		m_object->animated_mesh()->switch_animation(m_object->animated_mesh() -> default_animation());
+	//		m_speed = 1.0f;
+	//	}
+	//}
 
 	m_player_box.on_update(object()->position() - glm::vec3(0.f, object()->offset().y,
 		0.f) * object()->scale(), object()->rotation_amount(), object()->rotation_axis());
@@ -80,6 +92,7 @@ void player::turn(float angle)
 	/*m_object->set_forward(glm::rotate(m_object->forward(), angle, glm::vec3(0.f, 1.f,
 		0.f)));*/
 	m_object->set_angular_velocity(glm::vec3(0.f, angle * 100.f, 0.f));
+	glm::vec3 enemypos = m_object->position();
 }
 
 void player::update_tp_camera(engine::perspective_camera& camera)
@@ -108,14 +121,37 @@ void player::update_fp_camera(engine::perspective_camera& camera)
 	camera.set_view_matrix(cameraPostion, camViewPoint);
 }
 
-void player::jump()
+void player::jump(const engine::timestep& time_step)
 {
-	m_object->animated_mesh()->switch_root_movement(true);
-	m_object->animated_mesh()->switch_animation(3);
-	m_speed = 0.5f;
+	if (jumpTime > jumpCD)
+	{
+		jumpTime = 0.f;
 
+		m_object->animated_mesh()->switch_root_movement(true);
+		m_object->animated_mesh()->switch_animation(3);
+		m_speed = 0.5f;
 
-	m_timer = m_object->animated_mesh()->animations().at(3)->mDuration;
+		m_timer = m_object->animated_mesh()->animations().at(3)->mDuration;
+
+		is_jumping = true;
+
+		m_object->set_acceleration(m_object->acceleration() + jumping_acc - 9.81f);
+
+		if (is_jumping)
+		{
+			m_object->set_velocity(m_object->velocity() + jumping_acc);
+			m_object->set_position(m_object->position() + m_object->velocity());
+			if (m_object->velocity().y <= 0)
+			{
+				is_jumping = false;
+				m_object->set_acceleration(glm::vec3(0));
+				m_object->set_velocity(glm::vec3(0));
+				m_object->set_position(glm::vec3(0));
+			}
+		}
+
+	}
+
 
 }
 
@@ -137,3 +173,4 @@ void player::wobble()
 	if (cam_wobble >= 0.6f) wobble_modifier = -0.002f;
 	if (cam_wobble <= 0.4f) wobble_modifier = 0.002f;
 }
+
