@@ -17,9 +17,10 @@ void engine::text_manager::init()
 	if (FT_Init_FreeType(&ft))
 		LOG_CORE_ERROR("[text] Could not init FreeType Library");
 
+	// Open Font donwloaded from https://fonts.google.com/specimen/Creepster
 	FT_Face face;
-	if (FT_New_Face(ft, "assets/fonts/arial.ttf", 0, &face))
-		LOG_CORE_ERROR("[text] Failed to load font 'arial.ttf'");
+	if (FT_New_Face(ft, "assets/fonts/Creepster-Regular.ttf", 0, &face))
+		LOG_CORE_ERROR("[text] Failed to load font 'Creepster-Regular.ttf'");
 	else
 	{
 		FT_Set_Pixel_Sizes(face, 0, 48);

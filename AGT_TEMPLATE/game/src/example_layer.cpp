@@ -30,7 +30,6 @@ example_layer::example_layer()
 	m_audio_manager->load_sound("assets/audio/ominous.wav",		engine::sound_type::track, "ominous");		// Royalty free sound from https://freesound.org/people/zimbot/sounds/322054/
 	m_audio_manager->load_sound("assets/audio/rain.wav",		engine::sound_type::track, "rain");			// Royalty free sound from https://freesound.org/people/psuess/sounds/393483/
 	m_audio_manager->load_sound("assets/audio/electricity.wav", engine::sound_type::event, "electricity");  // Royalty free sound from https://freesound.org/people/sharesynth/sounds/341666/
-	m_audio_manager->load_sound("assets/audio/explosion.wav",	engine::sound_type::event, "explosion");	// Royalty free sound from https://freesound.org/people/derplayer/sounds/587186/
 	m_audio_manager->load_sound("assets/audio/throw.wav",		engine::sound_type::event, "throw");		// Royalty free sound from https://freesound.org/people/marchon11/sounds/493224/
 	m_audio_manager->load_sound("assets/audio/pickup.ogg",		engine::sound_type::event, "pickup");		// Royalty free sound from https://freesound.org/people/TreasureSounds/sounds/332629/
 	m_audio_manager->load_sound("assets/audio/speedup.wav",		engine::sound_type::event, "speedup");		// Royalty free sound from https://freesound.org/people/Eschwabe3/sounds/460132/
@@ -538,7 +537,6 @@ void example_layer::on_update(const engine::timestep& time_step)
 	glm::vec3 enemy_pos = m_enemy.object()->position();
 
 	m_gameOverTime += time_step;
-	std::cout << m_gameOverTime << '\n';
 
 	enemy_attackTime += time_step;
 	lightningTime += time_step;
@@ -661,7 +659,6 @@ void example_layer::on_update(const engine::timestep& time_step)
 		blastAvailable = true;
 		unawareMimicKilled = false;
 		spawnGrenade = false;
-		std::cout << "grenade picked up" << '\n';
 		m_player.setPosition(glm::vec3(7.f, 0.5f, -16.f));
 	}
 
@@ -1019,11 +1016,11 @@ void example_layer::on_event(engine::event& event)
 			m_3d_camera.position(glm::vec3(0, -20.f, 13.0));
 			m_intro_spotLight.Position += glm::vec3(-21.f, 0, 0);
 		}
-		if (e.key_code() == engine::key_codes::KEY_J)
-		{
-			//toggle to freecam for debugging
-			freeCam = !freeCam;
-		}
+		//if (e.key_code() == engine::key_codes::KEY_J)
+		//{
+		//	//toggle to freecam for debugging
+		//	freeCam = !freeCam;
+		//}
 		if (e.key_code() == engine::key_codes::KEY_1 && blastAvailable && m_gameStart)
 		{
 			//throws a grenade, a player can only have 1 grenade equipped at a time
@@ -1084,6 +1081,7 @@ void example_layer::resetPropPosition(engine::game_object_properties props)
 }
 
 //Update the heart counter based on the player's HP
+// Do it using an index that is increased and decreased 
 void example_layer::checkHP()
 {
 	int hp = m_player.getHealth();
