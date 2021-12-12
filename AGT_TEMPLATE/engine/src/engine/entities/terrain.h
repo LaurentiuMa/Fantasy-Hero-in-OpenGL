@@ -29,6 +29,13 @@ namespace engine
 		// terrain's length
 		float m_length;
 
+		// Changed the cuboid class definition to include a repeat
+		// float which dictates if the cuboid should be repeating the
+		// assigned texture. Changed all of the calls to include and
+		// additional 1.f as and additional parameter.
+
+		// Functionality is displayed when creating the ground in
+		// example_layer.cpp.
 		float m_repeat;
 	};
 }

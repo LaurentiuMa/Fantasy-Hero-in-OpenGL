@@ -1,10 +1,9 @@
 #include "pch.h"
-#include "tetrahedron.h"
 #include <engine.h>
 
 engine::potion::potion()
 {
-
+	// Texture coordinates behaved strangely for the front and back so I changed them to 0.25 and 0.75
 	std::vector<mesh::vertex> potion_vertices
 	{
 		//front
@@ -44,7 +43,7 @@ engine::potion::potion()
 		{ {4,0,2},		{0,-1,0},		{1 ,1} },
 		{ {-4,0,2},		{0,-1,0},		{0 ,1} },
 
-		//CAP VECTORS
+		//POTION CAP VECTORS
 
 		//front
 		{ {-1,3,1},		{ 0,0,1},		{0 ,0} },
@@ -92,7 +91,7 @@ engine::potion::potion()
 		16, 17, 18,		16, 18, 19,  //upper
 		20, 21, 22,		20, 22, 23,   //bottom
 
-		//CAP INDICES
+		//POTION CAP INDICES
 		24, 25, 26,		24, 26, 27,  //front
 		28, 29, 30,		28, 30, 31,  //right
 		32, 33, 34,		32,	34, 35,  //back

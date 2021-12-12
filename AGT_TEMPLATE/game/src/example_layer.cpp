@@ -7,6 +7,9 @@
 #include "engine/utils/track.h"
 #include <glm/glm/gtx/string_cast.hpp>
 
+//DISCLAIMER: The variable m_cow is used for the Mob, not entirely appropriate  however it was too late to
+//			  change this at the time.
+
 example_layer::example_layer() 
     :m_2d_camera(-1.6f, 1.6f, -0.9f, 0.9f), 
     m_3d_camera((float)engine::application::window().width(), (float)engine::application::window().height())
@@ -22,20 +25,18 @@ example_layer::example_layer()
 	// Initialise audio and play background music
 	m_audio_manager = engine::audio_manager::instance();
 	m_audio_manager->init();
-	m_audio_manager->load_sound("assets/audio/bounce.wav", engine::sound_type::spatialised, "bounce"); // Royalty free sound from freesound.org
-	m_audio_manager->load_sound("assets/audio/background.wav", engine::sound_type::track, "music");  // Royalty free music from http://www.nosoapradio.us/
-	m_audio_manager->load_sound("assets/audio/birds.wav", engine::sound_type::track, "birds");  // Royalty free sound from https://freesound.org/people/CosmicEmbers/sounds/161649/
-	m_audio_manager->load_sound("assets/audio/electricity.wav", engine::sound_type::event, "electricity");  // Royalty sound from https://freesound.org/people/sharesynth/sounds/341666/
-	m_audio_manager->load_sound("assets/audio/explosion.wav", engine::sound_type::event, "explosion");  // Royalty sound from https://freesound.org/people/derplayer/sounds/587186/
-	m_audio_manager->load_sound("assets/audio/ominous.wav", engine::sound_type::track, "ominous");  // Royalty free sound from https://freesound.org/people/zimbot/sounds/322054/
-	m_audio_manager->load_sound("assets/audio/rain.wav", engine::sound_type::track, "rain");  // Royalty free sound from https://freesound.org/people/psuess/sounds/393483/
-	m_audio_manager->load_sound("assets/audio/throw.wav", engine::sound_type::event, "throw");  // Royalty free sound from https://freesound.org/people/marchon11/sounds/493224/
-	m_audio_manager->load_sound("assets/audio/pickup.ogg", engine::sound_type::event, "pickup");  // Royalty free sound from https://freesound.org/people/TreasureSounds/sounds/332629/
-	m_audio_manager->load_sound("assets/audio/speedup.wav", engine::sound_type::event, "speedup");  // Royalty free sound from https://freesound.org/people/Eschwabe3/sounds/460132/
-	m_audio_manager->load_sound("assets/audio/healing.wav", engine::sound_type::event, "healing");  // Royalty free sound from https://freesound.org/people/KeshaFilm/sounds/471834/
+	m_audio_manager->load_sound("assets/audio/background.wav",	engine::sound_type::track, "music");		// Royalty free music from http://www.nosoapradio.us/
+	m_audio_manager->load_sound("assets/audio/birds.wav",		engine::sound_type::track, "birds");		// Royalty free sound from https://freesound.org/people/CosmicEmbers/sounds/161649/
+	m_audio_manager->load_sound("assets/audio/ominous.wav",		engine::sound_type::track, "ominous");		// Royalty free sound from https://freesound.org/people/zimbot/sounds/322054/
+	m_audio_manager->load_sound("assets/audio/rain.wav",		engine::sound_type::track, "rain");			// Royalty free sound from https://freesound.org/people/psuess/sounds/393483/
+	m_audio_manager->load_sound("assets/audio/electricity.wav", engine::sound_type::event, "electricity");  // Royalty free sound from https://freesound.org/people/sharesynth/sounds/341666/
+	m_audio_manager->load_sound("assets/audio/explosion.wav",	engine::sound_type::event, "explosion");	// Royalty free sound from https://freesound.org/people/derplayer/sounds/587186/
+	m_audio_manager->load_sound("assets/audio/throw.wav",		engine::sound_type::event, "throw");		// Royalty free sound from https://freesound.org/people/marchon11/sounds/493224/
+	m_audio_manager->load_sound("assets/audio/pickup.ogg",		engine::sound_type::event, "pickup");		// Royalty free sound from https://freesound.org/people/TreasureSounds/sounds/332629/
+	m_audio_manager->load_sound("assets/audio/speedup.wav",		engine::sound_type::event, "speedup");		// Royalty free sound from https://freesound.org/people/Eschwabe3/sounds/460132/
+	m_audio_manager->load_sound("assets/audio/healing.wav",		engine::sound_type::event, "healing");		// Royalty free sound from https://freesound.org/people/KeshaFilm/sounds/471834/
 
 	m_audio_manager->play("music");
-	//m_audio_manager->pause("music");
 
 	m_gameStart = false;
 	m_display_options = false;
@@ -49,8 +50,8 @@ example_layer::example_layer()
 	unawareMimicKilled = false;
 	grenadePickedup = false;
 	mimicAlive = true;
-	lemurAlive = true;
-	cowAlive = true;
+	lemurCaught = true;
+	cowDefeated = true;
 	spawnGrenade = false;
 	m_gameOver = false;
 
@@ -64,6 +65,7 @@ example_layer::example_layer()
 	auto mesh_shader = engine::renderer::shaders_library()->get("mesh");
 	auto text_shader = engine::renderer::shaders_library()->get("text_2D");
 
+	// Create the lights
 	m_directionalLight.Color = glm::vec3(0.1f, 0.5f, 0.1f);
 	m_directionalLight.AmbientIntensity = 0.15f;
 	m_directionalLight.DiffuseIntensity = 0.3f;
@@ -85,7 +87,7 @@ example_layer::example_layer()
 	m_intro_spotLight.Attenuation.Exp = 0.01f;
 
 
-	// set color texture unit
+	// Set color texture unit
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->bind();
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("lighting_on", true);
 	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->set_uniform("gColorMap", 0);
@@ -163,6 +165,7 @@ example_layer::example_layer()
 	wallDepth = 4.f;
 	wallWidth = 5.f;
 	// All of the walls in the scene, do not remove any of them as it will mess up the translate for the rest.
+	// TODO: improve on this implementation
 	std::vector<engine::ref<engine::texture_2d>> wall_textures = { engine::texture_2d::create("assets/textures/spaceTerrain.jpg", false) };
 	engine::ref<engine::terrain> wall_shape = engine::terrain::create(wallLength, wallDepth, wallWidth, 1.f);
 	engine::game_object_properties wall_props;
@@ -337,7 +340,7 @@ example_layer::example_layer()
 	barrel_props.meshes = barrel_model->meshes();
 	barrel_props.textures = barrel_model->textures();
 	float barrel_scale = 1.f / glm::max(barrel_model->size().x , glm::max(barrel_model->size().y, barrel_model->size().z));
-	barrel_props.position = { 0.f,3.0f, 0.f };
+	barrel_props.position = { 3.f,2.0f, 1.f };
 	barrel_props.scale = glm::vec3(barrel_scale);
 	barrel_props.bounding_shape = barrel_model->size()/2.f * (glm::vec3(2.f,1.f,2.f));
 	barrel_props.type = 0;
@@ -415,7 +418,7 @@ example_layer::example_layer()
 	grenade_props.rolling_friction = 0.1f;
 	m_grenadePickup = engine::game_object::create(grenade_props);
 
-
+	// Set up the sphere that is to be used for the light sources, mostly useful for debugging
 	float radius = 0.1f;
 	engine::ref<engine::sphere>sphere_shape = engine::sphere::create(10, 20, radius);
 	engine::game_object_properties sphere_props;
@@ -427,7 +430,7 @@ example_layer::example_layer()
 	sphere_props.mass = 0.01f;
 	m_ball = engine::game_object::create(sphere_props);
 
-
+	// Create and set up the potion primitive
 	engine::ref<engine::potion> potion_shape =
 		engine::potion::create();
 	engine::game_object_properties potion_props;
@@ -445,6 +448,7 @@ example_layer::example_layer()
 	potion_props.mass = 1.0f;
 	m_potion = engine::game_object::create(potion_props);
 
+	// Create and set up the potion primitive
 	engine::ref<engine::table> table_shape =
 		engine::table::create();
 	engine::game_object_properties table_props;
@@ -460,6 +464,7 @@ example_layer::example_layer()
 	table_props.scale = glm::vec3(0.1f);
 	m_table = engine::game_object::create(table_props);
 
+	// Create and set up the torch primitive
 	engine::ref<engine::torch> torch_shape =
 		engine::torch::create();
 	engine::game_object_properties torch_props;
@@ -472,8 +477,8 @@ example_layer::example_layer()
 
 
 	m_game_objects.push_back(m_terrain);
-
 	m_game_objects.push_back(m_intro);
+	m_game_objects.push_back(m_options);
 
 	m_game_objects.push_back(m_westEntranceWall);
 	m_game_objects.push_back(m_eastEntranceWall);
@@ -488,18 +493,15 @@ example_layer::example_layer()
 	m_game_objects.push_back(m_mainWestWall);
 	m_game_objects.push_back(m_splitterWall);
 
-
-	m_game_objects.push_back(m_options);
-
 	m_game_objects.push_back(m_barrel);
 	m_game_objects.push_back(m_sword);
-	m_game_objects.push_back(m_lightningPickup);
 
+	m_game_objects.push_back(m_lightningPickup);
 	m_game_objects.push_back(m_grenadePickup);
+
 	m_game_objects.push_back(m_mannequin);
 
 	m_physics_manager = engine::bullet_manager::create(m_game_objects);
-
 	m_text_manager = engine::text_manager::create();
 
 	m_skinned_mesh->switch_animation(1);
@@ -516,7 +518,8 @@ example_layer::example_layer()
 	m_hud_forty = hud::create("assets/textures/heart40.png", 0.2f, 0.2f);
 	m_hud_twenty = hud::create("assets/textures/heart20.png", 0.2f, 0.2f);
 	m_hud_zero = hud::create("assets/textures/heart0.png", 0.2f, 0.2f);
-
+	// All of the images are placed in a vector. As hp goes down, images get popped off and .back() is used
+	// as the image on display
 	m_heart_vector = { m_hud_zero, m_hud_twenty, m_hud_forty, m_hud_sixty, m_hud_eighty, m_hud_hundred };
 	
 
@@ -615,7 +618,7 @@ void example_layer::on_update(const engine::timestep& time_step)
 	if (m_lemur_box.collision(m_player.getBox()))
 	{
 		m_player.increaseSpeed();
-		lemurAlive = false;
+		lemurCaught = false;
 		m_audio_manager->play("speedup");
 		m_lemur->set_position(glm::vec3(20.f,-20.f,20.f));
 		m_lemur_box.setPosition(glm::vec3(20.f, -20.f, 20.f));
@@ -715,6 +718,7 @@ void example_layer::on_render()
 	engine::renderer::submit(mesh_shader, m_mainWestWall);
 	engine::renderer::submit(mesh_shader, m_splitterWall);
 
+	// Press 8 to show the bounding boxes 
 	if (drawBoundingBoxes == true)
 	{
 		m_barrel_box.on_render(2.5f, 0.f, 0.f, mesh_shader);
@@ -733,7 +737,6 @@ void example_layer::on_render()
 	engine::renderer::submit(mesh_shader, m_barrel);
 
 	engine::renderer::submit(mesh_shader, m_intro);
-
 	engine::renderer::submit(mesh_shader, m_options);
 
 	if (spawnPotion == true)
@@ -744,6 +747,8 @@ void example_layer::on_render()
 		potion_transform = glm::scale(potion_transform, m_potion->scale());
 		engine::renderer::submit(mesh_shader, potion_transform, m_potion);
 	}
+
+	// Spawn the grenade (key to next level) if the mimic was unaware when killed
 	if (unawareMimicKilled == true && spawnGrenade == true)
 	{ 
 		glm::mat4 grenade_transform(1.0f);
@@ -759,6 +764,7 @@ void example_layer::on_render()
 	table_transform = glm::scale(table_transform, m_table->scale());
 	engine::renderer::submit(mesh_shader, table_transform, m_table);
 
+	// Render the cow if it is not dead, otherwise declare game over
 	if (m_enemy.getHealth() > 0)
 	{
 		glm::mat4 cow_transform(1.0f);
@@ -774,7 +780,7 @@ void example_layer::on_render()
 		m_gameOver = true;
 	}
 	
-
+	// Render the mimic if it has not been destroyed
 	if (mimicAlive == true)
 	{
 		glm::mat4 mimic_transform(1.0f);
@@ -784,7 +790,8 @@ void example_layer::on_render()
 		engine::renderer::submit(mesh_shader, mimic_transform, m_mimic);
 	}
 
-	if (lemurAlive == true)
+	// Render the lemur if it has not been caught
+	if (lemurCaught == true)
 	{
 		glm::mat4 lemur_transform(1.0f);
 		lemur_transform = glm::translate(lemur_transform, m_lemur->position());
@@ -792,14 +799,16 @@ void example_layer::on_render()
 		lemur_transform = glm::scale(lemur_transform, m_lemur->scale());
 		engine::renderer::submit(mesh_shader, lemur_transform, m_lemur);
 	}
-	
+
+	// Table primitives
 	glm::mat4 flipped_table_transform(1.0f);
-	flipped_table_transform = glm::translate(flipped_table_transform, glm::vec3(3.8f,1.25f,-11.f));
-	flipped_table_transform = glm::rotate(flipped_table_transform, glm::pi<float>(), glm::vec3(1.f,0,0));
+	flipped_table_transform = glm::translate(flipped_table_transform, glm::vec3(3.8f,0.5f,-11.f));
+	//flipped_table_transform = glm::rotate(flipped_table_transform, glm::pi<float>(), glm::vec3(1.f,0,0));
 	flipped_table_transform = glm::rotate(flipped_table_transform, glm::pi<float>()/4, glm::vec3(0, 1.f, 0));
 	flipped_table_transform = glm::scale(flipped_table_transform, glm::vec3(.01f));
 	engine::renderer::submit(mesh_shader, flipped_table_transform, m_table);
 
+	// Table primitives
 	glm::mat4 second_flipped_table_transform(1.0f);
 	second_flipped_table_transform = glm::translate(second_flipped_table_transform, glm::vec3(9.5f, 1.25f, -16.f));
 	second_flipped_table_transform = glm::rotate(second_flipped_table_transform, glm::pi<float>(), glm::vec3(1.f, 0, 0));
@@ -842,6 +851,7 @@ void example_layer::on_render()
 	yy_barrel_transform = glm::scale(yy_barrel_transform, glm::vec3(.01f));
 	engine::renderer::submit(mesh_shader, yy_barrel_transform, m_barrel);
 
+	// Set up the bolt transformations
 	if (lightningPickup == true)
 	{
 		glm::mat4 bolt_transform(1.0f);
@@ -885,6 +895,7 @@ void example_layer::on_render()
 	torch_five_transform = glm::rotate(torch_five_transform, glm::pi<float>() / 3, glm::vec3(0, 0, .1f));
 	engine::renderer::submit(mesh_shader, torch_five_transform, m_torch);
 
+	// Transforms the red ball that is the light source of the torch, other broken torches do not have this
 	glm::mat4 torchLight_five_transform(1.0f);
 	torchLight_five_transform = glm::translate(torchLight_five_transform, glm::vec3(10.82f, 3.0f, -5.97f));
 	torchLight_five_transform = glm::scale(torchLight_five_transform, glm::vec3(1.4f, 1.4f, 1.4f));
@@ -922,34 +933,31 @@ void example_layer::on_render()
 
     engine::renderer::end_scene();
 
-	//display the heart monitor on the HUD
-	engine::renderer::begin_scene(m_2d_camera, mesh_shader);
+	if (m_gameStart)
+	{
+		//display the heart monitor on the HUD
+		engine::renderer::begin_scene(m_2d_camera, mesh_shader);
 
-	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
-		set_uniform("lighting_on", false);
-	m_heart_vector.back()->on_render(mesh_shader);
-	std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
-		set_uniform("lighting_on", true);
+		std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
+			set_uniform("lighting_on", false);
+		m_heart_vector.back()->on_render(mesh_shader);
+		std::dynamic_pointer_cast<engine::gl_shader>(mesh_shader)->
+			set_uniform("lighting_on", true);
 
-	engine::renderer::end_scene();
-
+		engine::renderer::end_scene();
+	}
 	// Render text
 	const auto text_shader = engine::renderer::shaders_library()->get("text_2D");
-	m_text_manager->render_text(text_shader, "Horror Health: " + std::to_string(m_enemy.getHealth()) , 10.f, (float)engine::application::window().height() - 75.f, 0.5f, glm::vec4(1.f, 0.5f, 0.f, 1.f));
+	if (m_gameStart)
+	{
+		m_text_manager->render_text(text_shader, "Horror Health: " + std::to_string(m_enemy.getHealth()),
+			10.f,
+			(float)engine::application::window().height() - 75.f,
+			0.5f,
+			glm::vec4(1.f, 0.5f, 0.f, 1.f));
+	}
 
-	//if (m_gameOverTime <= m_gameOverCD)
-	//{
-	//	m_text_manager->render_text(text_shader, "GAME OVER",
-	//		(float)engine::application::window().width() / 2 - 300,
-	//		(float)engine::application::window().height() / 2,
-	//		2.f,
-	//		glm::vec4(0.1f, 0.1f, 0.1f, 1.f));
-	//}
-	//else if (m_gameOverTime >= 2*m_gameOverCD)
-	//{
-	//	m_gameOverTime = 0.f;
-	//}
-
+	// blink some text saying "GAME OVER" when either the player of the cow dies
 	if (m_gameOver && m_gameOverTime <= m_gameOverCD)
 	{
 		m_text_manager->render_text(text_shader, "GAME OVER" ,
@@ -1031,6 +1039,11 @@ void example_layer::on_event(engine::event& event)
 			healingAvailable = false;
 			spawnPotion = false;
 			m_audio_manager->play("healing");
+			/*float hp = m_player.getHealth();
+			if		(hp >= 80) {m_heart_vector.push_back(m_hud_eighty);		heart_pops = 0;}
+			else if (hp >= 60) {m_heart_vector.push_back(m_hud_sixty);		heart_pops = 1;}
+			else if (hp >= 40) {m_heart_vector.push_back(m_hud_forty);		heart_pops = 2;}
+			else if (hp >= 20) {m_heart_vector.push_back(m_hud_twenty);		heart_pops = 3;}*/
 		}
 		if (e.key_code() == engine::key_codes::KEY_2 && lightningAvailable == true && m_gameStart)
 		{
@@ -1078,7 +1091,7 @@ void example_layer::checkHP()
 	if (hp <= 60 && heart_pops == 1)	popHeart();
 	if (hp <= 40 && heart_pops == 2)	popHeart();
 	if (hp <= 20 && heart_pops == 3)	popHeart();
-	if (hp <= 0 && heart_pops == 4)		popHeart();
+	if (hp <= 0  && heart_pops == 4)	popHeart();
 }
 
 //Quick function to avoid repetition and make the above code cleaner

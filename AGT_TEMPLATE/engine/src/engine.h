@@ -23,7 +23,6 @@
 #include "engine/renderer/camera.h"
 #include "engine/renderer/light.h"
 #include "engine/renderer/material.h"
-#include "engine/entities/shapes/tetrahedron.h"
 #include "engine/entities/shapes/table.h"
 #include "engine/entities/shapes/torch.h"
 #include "engine/entities/shapes/potion.h"

@@ -16,7 +16,7 @@ void lemur::on_update(const engine::timestep& time_step, const glm::vec3& player
 	if (m_state == state::patrolling)
 	{
 		patrol(time_step);
-		// check whether the condition has been met to switch to the on_guard state
+		// check whether the condition has been met to switch to the scared state
 		if (distance_to_player < m_detection_radius)
 			m_state = state::scared;
 			//run_away(time_step, player_position);
@@ -31,8 +31,8 @@ void lemur::on_update(const engine::timestep& time_step, const glm::vec3& player
 	}
 	
 }
-// move forwards until the timer runs out, then switch direction to move the other way
 
+// Move forwards until the timer runs out, then, randomly switch direction to move the other way
 void lemur::patrol(const engine::timestep& time_step)
 {
 	m_switch_direction_timer -= (float)time_step;
@@ -47,7 +47,7 @@ void lemur::patrol(const engine::timestep& time_step)
 	m_object->set_rotation_amount(atan2(m_object->forward().x, m_object->forward().z));
 }
 
-// move forwards in the direction of the player
+// Move forwards in the opposite direction of the player
 void lemur::run_away(const engine::timestep& time_step, const glm::vec3&
 	player_position)
 {
@@ -57,12 +57,11 @@ void lemur::run_away(const engine::timestep& time_step, const glm::vec3&
 	m_object->set_rotation_amount(atan2(m_object->forward().x, m_object->forward().z));
 }
 
+// Randomly assign the forward vector
 glm::vec3 lemur::changeForward()
 {
 	float x = rand() % 2 - 1;
 	float z = rand() % 2 - 1;
 
 	return glm::vec3(x, 0, z);
-
-
 }

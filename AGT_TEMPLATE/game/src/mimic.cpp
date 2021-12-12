@@ -18,7 +18,7 @@ void mimic::on_update(const engine::timestep& time_step, const glm::vec3& player
 	{
 		is_aware = false;
 		patrol(time_step);
-		// check whether the condition has been met to switch to the on_guard state
+		// check whether the condition has been met to switch to the aware state
 		if (distance_to_player < m_detection_radius)
 			m_state = state::aware;
 	}
@@ -34,7 +34,7 @@ void mimic::on_update(const engine::timestep& time_step, const glm::vec3& player
 
 }
 
-// move forwards until the timer runs out, then switch direction to move the other way
+// move up and down a straight line with the forward being based on a timer
 
 void mimic::patrol(const engine::timestep& time_step)
 {

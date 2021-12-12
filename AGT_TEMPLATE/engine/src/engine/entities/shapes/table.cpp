@@ -110,6 +110,8 @@ engine::table::table()
 	std::vector<uint32_t> top_left_foot_indices = table_indices;
 	std::vector<uint32_t> top_right_foot_indices = table_indices;
 
+	// Create the negative vertices from the pre-existing coordinates.
+	// This is to avoid having to write the coordinated for every vertex.
 	for (auto i = 0; i < table.size(); ++i)
 	{	
 		bottom_right_foot_vertices[i].position.x = bottom_right_foot_vertices[i].position.x * -1;
@@ -117,30 +119,33 @@ engine::table::table()
 
 		top_right_foot_vertices[i].position.x = top_right_foot_vertices[i].position.x * -1;
 		top_right_foot_vertices[i].position.z = top_right_foot_vertices[i].position.z * -1;
-		
-		/*std::cout << bottom_right_foot[i].position.x * -1 << '\n';*/
 	}
 
+	// Insert all of the newly created coordinates into the vector
 	table.insert(table.end(), tableTop.begin(), tableTop.end());
 	table.insert(table.end(), bottom_right_foot_vertices.begin(), bottom_right_foot_vertices.end());
 	table.insert(table.end(), top_left_foot_vertices.begin(), top_left_foot_vertices.end());
 	table.insert(table.end(), top_right_foot_vertices.begin(), top_right_foot_vertices.end());
 
 
-
+	// Add the appropriate amount to the nth index in the collection such that the order of the
+	// table legs is kept unchanged such as: bottom left, bottom right, top left, top right.
 	for (auto i = 0; i < bottom_right_foot_indices.size(); ++i)
 	{
 		bottom_right_foot_indices[i] += 24;
 		top_left_foot_indices[i] += 48;
 		top_right_foot_indices[i] += 72;
 	}
+	// Reverse the indices of the final two additions as there were some winding issues and this fixed it.
 	std::reverse(bottom_right_foot_indices.begin(), bottom_right_foot_indices.end());
 	std::reverse(top_left_foot_indices.begin(), top_left_foot_indices.end());
 
+	// Insert all of the indices into a container
 	table_indices.insert(table_indices.end(), bottom_right_foot_indices.begin(), bottom_right_foot_indices.end());
 	table_indices.insert(table_indices.end(), top_left_foot_indices.begin(), top_left_foot_indices.end());
 	table_indices.insert(table_indices.end(), top_right_foot_indices.begin(), top_right_foot_indices.end());
 
+	// Pass indices as const
 	const std::vector<uint32_t> final_table_indices = table_indices;
 
 	m_mesh = engine::mesh::create(table, final_table_indices);

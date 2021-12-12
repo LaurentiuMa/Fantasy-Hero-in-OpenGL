@@ -20,6 +20,8 @@ void lightning_bolt::compute_path()
 	glm::vec3 d = m_direction;
 	for (int i = 1; i < 10; i++) {
 		int hi = rand();
+		// Changed the subtrahend to give the bolts a shorter range, the rest of the code is unchanged
+		// from the FX sample 
 		float r1 = (rand() / (float)RAND_MAX) - 1.0f;
 		float r2 = (rand() / (float)RAND_MAX) - 1.0f;
 		float r3 = (rand() / (float)RAND_MAX) - 1.0f;
